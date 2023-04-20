@@ -26,25 +26,28 @@ from torchvision import datasets, transforms
 
 
 def run_mpc_cifar(
-    epochs=25,
-    start_epoch=0,
-    batch_size=1,
-    lr=0.001,
-    momentum=0.9,
-    weight_decay=1e-6,
-    print_freq=10,
-    model_location="",
-    resume=False,
-    evaluate=True,
-    seed=None,
-    skip_plaintext=False,
-    context_manager=None,
+        epochs=25,
+        start_epoch=0,
+        batch_size=1,
+        lr=0.001,
+        momentum=0.9,
+        weight_decay=1e-6,
+        print_freq=10,
+        model_location="",
+        resume=False,
+        evaluate=True,
+        seed=None,
+        skip_plaintext=False,
+        context_manager=None,
 ):
     if seed is not None:
         random.seed(seed)
         torch.manual_seed(seed)
 
     crypten.init()
+
+    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = 'cuda:0'
 
     # create model
     model = LeNet()
@@ -72,6 +75,8 @@ def run_mpc_cifar(
         else:
             raise IOError("=> no checkpoint found at '{}'".format(model_location))
 
+    model = model.to(device)
+
     # Data loading code
     def preprocess_data(context_manager, data_dirname):
         transform = transforms.Compose(
@@ -98,17 +103,17 @@ def run_mpc_cifar(
     if context_manager is None:
         context_manager = NoopContextManager()
 
-    data_dir = tempfile.TemporaryDirectory()
-    train_loader, val_loader = preprocess_data(context_manager, data_dir.name)
+    data_dir = 'data/cifar10'
+    train_loader, val_loader = preprocess_data(context_manager, data_dir)
 
     if evaluate:
         if not skip_plaintext:
             logging.info("===== Evaluating plaintext LeNet network =====")
-            validate(val_loader, model, criterion, print_freq)
+            validate(val_loader, model, criterion, print_freq, device=device)
         logging.info("===== Evaluating Private LeNet network =====")
         input_size = get_input_size(val_loader, batch_size)
-        private_model = construct_private_model(input_size, model)
-        validate(val_loader, private_model, criterion, print_freq)
+        private_model = construct_private_model(input_size, model, device=device)
+        validate(val_loader, private_model, criterion, print_freq, device=device)
         # logging.info("===== Validating side-by-side ======")
         # validate_side_by_side(val_loader, model, private_model)
         return
@@ -118,10 +123,10 @@ def run_mpc_cifar(
         adjust_learning_rate(optimizer, epoch, lr)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, print_freq)
+        train(train_loader, model, criterion, optimizer, epoch, print_freq, device=device)
 
         # evaluate on validation set
-        prec1 = validate(val_loader, model, criterion, print_freq)
+        prec1 = validate(val_loader, model, criterion, print_freq, device=device)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
@@ -139,7 +144,7 @@ def run_mpc_cifar(
     data_dir.cleanup()
 
 
-def train(train_loader, model, criterion, optimizer, epoch, print_freq=10):
+def train(train_loader, model, criterion, optimizer, epoch, print_freq=10, device=torch.device('cpu')):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -151,6 +156,9 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq=10):
     end = time.time()
 
     for i, (input, target) in enumerate(train_loader):
+
+        input = input.to(device)
+        target = target.to(device)
 
         # compute output
         output = model(input)
@@ -223,22 +231,23 @@ def get_input_size(val_loader, batch_size):
     return input.size()
 
 
-def construct_private_model(input_size, model):
+def construct_private_model(input_size, model, device=torch.device('cpu')):
     """Encrypt and validate trained model for multi-party setting."""
     # get rank of current process
     rank = comm.get().get_rank()
-    dummy_input = torch.empty(input_size)
+    dummy_input = torch.empty(input_size, device=device)
 
     # party 0 always gets the actual model; remaining parties get dummy model
     if rank == 0:
         model_upd = model
     else:
         model_upd = LeNet()
-    private_model = crypten.nn.from_pytorch(model_upd, dummy_input).encrypt(src=0)
+    model_upd = model_upd.to(device)
+    private_model = crypten.nn.from_pytorch(model_upd, dummy_input).to(device).encrypt(src=0)
     return private_model
 
 
-def encrypt_data_tensor_with_src(input):
+def encrypt_data_tensor_with_src(input, device=torch.device('cpu')):
     """Encrypt data tensor for multi-party setting"""
     # get rank of current process
     rank = comm.get().get_rank()
@@ -255,12 +264,12 @@ def encrypt_data_tensor_with_src(input):
     if rank == src_id:
         input_upd = input
     else:
-        input_upd = torch.empty(input.size())
+        input_upd = torch.empty(input.size(), device=device)
     private_input = crypten.cryptensor(input_upd, src=src_id)
     return private_input
 
 
-def validate(val_loader, model, criterion, print_freq=10):
+def validate(val_loader, model, criterion, print_freq=10, device=torch.device('cpu')):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -272,10 +281,12 @@ def validate(val_loader, model, criterion, print_freq=10):
     with torch.no_grad():
         end = time.time()
         for i, (input, target) in enumerate(val_loader):
+            input = input.to(device)
+            target = target.to(device)
             if isinstance(model, crypten.nn.Module) and not crypten.is_encrypted_tensor(
-                input
+                    input
             ):
-                input = encrypt_data_tensor_with_src(input)
+                input = encrypt_data_tensor_with_src(input, device)
             # compute output
             output = model(input)
             if crypten.is_encrypted_tensor(output):
