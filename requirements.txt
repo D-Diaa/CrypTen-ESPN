@@ -1,2 +1,4 @@
 boto3
+pyyaml
+omegaconf
 visdom>=0.1.8.8

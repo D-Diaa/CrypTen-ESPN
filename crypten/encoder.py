@@ -45,7 +45,7 @@ class FixedPointEncoder:
         elif isinstance(x, int) or isinstance(x, float):
             # Squeeze in order to get a 0-dim tensor with value `x`
             return torch.tensor(
-                [self._scale * x], dtype=torch.long, device=device
+                [int(self._scale * x)], dtype=torch.long, device=device
             ).squeeze()
         elif isinstance(x, list):
             return (
