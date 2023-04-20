@@ -545,7 +545,7 @@ class TestMPC(object):
     def test_conv_transpose2d_rectangular_image_many_channels(self):
         self._conv2d((16, 7), 5, "conv_transpose2d")
 
-    def _conv2d(self, image_size, in_channels, func_name):
+    def _conv2d(self, image_size, in_channels, func_name="conv2d"):
         """Test convolution of encrypted tensor with public/private tensors."""
         nbatches = [1, 3]
         kernel_sizes = [(1, 1), (2, 2), (2, 3)]
@@ -2014,7 +2014,7 @@ class TestMPC(object):
         def get_first_nonzero_value(x):
             x = x.flatten()
             x = x[x.abs().ge(1e-4)]
-            x = x.take(torch.tensor(0))
+            x = x.take(torch.tensor(0, device=self.device))
             return x
 
         # check that the encrypted and plaintext versions scale

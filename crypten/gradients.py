@@ -550,7 +550,7 @@ class AutogradFeatureDropout(AutogradFunction):
         # training mode:
         feature_dropout_size = input.size()[0:2]
         generator = crypten.generators["global"][input.device]
-        random_tensor = torch.rand(feature_dropout_size, generator=generator)
+        random_tensor = torch.rand(feature_dropout_size, generator=generator, device=input.device)
         boolean_mask = (random_tensor > p).to(dtype=torch.float)
         for i in range(2, input.dim()):
             boolean_mask = boolean_mask.unsqueeze(i)
