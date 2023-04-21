@@ -169,7 +169,7 @@ class ArithmeticSharedTensor(object):
             device = torch.device("cpu")
         elif isinstance(device, str):
             device = torch.device(device)
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             g0 = generators["prev"][device]
             g1 = generators["next"][device]
             current_share = generate_random_ring_element(*size, generator=g0, device=device)
@@ -185,7 +185,7 @@ class ArithmeticSharedTensor(object):
         """
         Generates a Pseudo-random Secret Share from a set of random arithmetic shares
         """
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             share = generate_random_ring_element(*size, device=device)
         else:
             share = zeros(*size, device=device)

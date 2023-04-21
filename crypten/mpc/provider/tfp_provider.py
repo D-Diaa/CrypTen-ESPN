@@ -20,7 +20,7 @@ class TrustedFirstParty(TupleProvider):
 
     def generate_additive_triple(self, size0, size1, op, device=None, *args, **kwargs):
         """Generate multiplicative triples of given sizes"""
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             a = zeros(size0, device=device)
             b = zeros(size1, device=device)
         else:
@@ -36,7 +36,7 @@ class TrustedFirstParty(TupleProvider):
 
     def square(self, size, device=None):
         """Generate square double of given size"""
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             r = generate_random_ring_element(size, device=device)
             r2 = r.mul(r)
 
@@ -49,7 +49,7 @@ class TrustedFirstParty(TupleProvider):
 
     def kpows(self, size, k, device=None):
         """Generate square double of given size"""
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             r = generate_random_ring_element(size, device=device)
             rs = [r]
             for _ in range(2, k + 1):
@@ -64,7 +64,7 @@ class TrustedFirstParty(TupleProvider):
 
     def generate_binary_triple(self, size0, size1, device=None):
         """Generate xor triples of given size"""
-        if cfg.dummy_shares:
+        if cfg.mpc.dummy_shares:
             a = generate_kbit_random_tensor(size0, device=device)
             b = generate_kbit_random_tensor(size1, device=device)
         else:
