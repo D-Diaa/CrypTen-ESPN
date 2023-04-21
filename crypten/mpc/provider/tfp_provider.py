@@ -5,13 +5,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten.communicator as comm
 import torch
-from crypten.common.rng import generate_kbit_random_tensor, generate_random_ring_element
+
+import crypten.communicator as comm
+from crypten.common.rng import generate_kbit_random_tensor, generate_random_ring_element, zeros, ones
 from crypten.common.util import count_wraps, torch_stack
 from crypten.mpc.primitives import ArithmeticSharedTensor, BinarySharedTensor
-
 from .provider import TupleProvider
+from crypten.config import cfg
 
 
 class TrustedFirstParty(TupleProvider):
@@ -19,11 +20,14 @@ class TrustedFirstParty(TupleProvider):
 
     def generate_additive_triple(self, size0, size1, op, device=None, *args, **kwargs):
         """Generate multiplicative triples of given sizes"""
-        a = generate_random_ring_element(size0, device=device)
-        b = generate_random_ring_element(size1, device=device)
+        if cfg.dummy_shares:
+            a = zeros(size0, device=device)
+            b = zeros(size1, device=device)
+        else:
+            a = generate_random_ring_element(size0, device=device)
+            b = generate_random_ring_element(size1, device=device)
 
         c = getattr(torch, op)(a, b, *args, **kwargs)
-
         a = ArithmeticSharedTensor(a, precision=0, src=0)
         b = ArithmeticSharedTensor(b, precision=0, src=0)
         c = ArithmeticSharedTensor(c, precision=0, src=0)
@@ -32,18 +36,40 @@ class TrustedFirstParty(TupleProvider):
 
     def square(self, size, device=None):
         """Generate square double of given size"""
-        r = generate_random_ring_element(size, device=device)
-        r2 = r.mul(r)
+        if cfg.dummy_shares:
+            r = generate_random_ring_element(size, device=device)
+            r2 = r.mul(r)
 
-        # Stack to vectorize scatter function
-        stacked = torch_stack([r, r2])
+            # Stack to vectorize scatter function
+            stacked = torch_stack([r, r2])
+        else:
+            stacked = ones((2, *size), device=device)
         stacked = ArithmeticSharedTensor(stacked, precision=0, src=0)
         return stacked[0], stacked[1]
 
+    def kpows(self, size, k, device=None):
+        """Generate square double of given size"""
+        if cfg.dummy_shares:
+            r = generate_random_ring_element(size, device=device)
+            rs = [r]
+            for _ in range(2, k + 1):
+                rs.append(rs[-1] * r)
+
+            # Stack to vectorize scatter function
+            stacked = torch_stack(rs)
+        else:
+            stacked = ones((k, *size), device=device)
+        stacked = ArithmeticSharedTensor(stacked, precision=0, src=0)
+        return stacked
+
     def generate_binary_triple(self, size0, size1, device=None):
         """Generate xor triples of given size"""
-        a = generate_kbit_random_tensor(size0, device=device)
-        b = generate_kbit_random_tensor(size1, device=device)
+        if cfg.dummy_shares:
+            a = generate_kbit_random_tensor(size0, device=device)
+            b = generate_kbit_random_tensor(size1, device=device)
+        else:
+            a = zeros(size0, device=device)
+            b = zeros(size1, device=device)
         c = a & b
 
         a = BinarySharedTensor(a, src=0)

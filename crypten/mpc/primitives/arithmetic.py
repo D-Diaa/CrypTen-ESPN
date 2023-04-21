@@ -5,19 +5,18 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten.communicator as comm
-
 # dependencies:
 import torch
+
+import crypten.communicator as comm
 from crypten.common.functions import regular
-from crypten.common.rng import generate_random_ring_element
+from crypten.common.rng import zeros, generate_random_ring_element
 from crypten.common.tensor_types import is_float_tensor, is_int_tensor, is_tensor
 from crypten.common.util import torch_stack
 from crypten.config import cfg
 from crypten.cryptensor import CrypTensor
 from crypten.cuda import CUDALongTensor
 from crypten.encoder import FixedPointEncoder
-
 from . import beaver, replicated  # noqa: F401
 
 
@@ -36,13 +35,13 @@ class ArithmeticSharedTensor(object):
 
     # constructors:
     def __init__(
-        self,
-        tensor=None,
-        size=None,
-        broadcast_size=False,
-        precision=None,
-        src=0,
-        device=None,
+            self,
+            tensor=None,
+            size=None,
+            broadcast_size=False,
+            precision=None,
+            src=0,
+            device=None,
     ):
         """
         Creates the shared tensor from the input `tensor` provided by party `src`.
@@ -68,17 +67,17 @@ class ArithmeticSharedTensor(object):
 
         # assertions on inputs:
         assert (
-            isinstance(src, int) and src >= 0 and src < comm.get().get_world_size()
+                isinstance(src, int) and src >= 0 and src < comm.get().get_world_size()
         ), "specified source party does not exist"
         if self.rank == src:
             assert tensor is not None, "source must provide a data tensor"
             if hasattr(tensor, "src"):
                 assert (
-                    tensor.src == src
+                        tensor.src == src
                 ), "source of data tensor must match source of encryption"
         if not broadcast_size:
             assert (
-                tensor is not None or size is not None
+                    tensor is not None or size is not None
             ), "must specify tensor or size, or set broadcast_size"
 
         # if device is unspecified, try and get it from tensor:
@@ -170,10 +169,14 @@ class ArithmeticSharedTensor(object):
             device = torch.device("cpu")
         elif isinstance(device, str):
             device = torch.device(device)
-        g0 = generators["prev"][device]
-        g1 = generators["next"][device]
-        current_share = generate_random_ring_element(*size, generator=g0, device=device)
-        next_share = generate_random_ring_element(*size, generator=g1, device=device)
+        if cfg.dummy_shares:
+            g0 = generators["prev"][device]
+            g1 = generators["next"][device]
+            current_share = generate_random_ring_element(*size, generator=g0, device=device)
+            next_share = generate_random_ring_element(*size, generator=g1, device=device)
+        else:
+            current_share = zeros(*size, device=device)
+            next_share = zeros(*size, device=device)
         tensor.share = current_share - next_share
         return tensor
 
@@ -182,7 +185,10 @@ class ArithmeticSharedTensor(object):
         """
         Generates a Pseudo-random Secret Share from a set of random arithmetic shares
         """
-        share = generate_random_ring_element(*size, device=device)
+        if cfg.dummy_shares:
+            share = generate_random_ring_element(*size, device=device)
+        else:
+            share = zeros(*size, device=device)
         tensor = ArithmeticSharedTensor.from_shares(share=share)
         return tensor
 
@@ -233,7 +239,7 @@ class ArithmeticSharedTensor(object):
         Pads the input tensor with values provided in `value`.
         """
         assert mode == "constant", (
-            "Padding with mode %s is currently unsupported" % mode
+                "Padding with mode %s is currently unsupported" % mode
         )
 
         result = self.shallow_copy()
@@ -249,7 +255,7 @@ class ArithmeticSharedTensor(object):
                 )
         elif isinstance(value, ArithmeticSharedTensor):
             assert (
-                value.dim() == 0
+                    value.dim() == 0
             ), "Private values used for padding must be 0-dimensional"
             value = value.share.item()
             result.share = torch.nn.functional.pad(
@@ -468,7 +474,7 @@ class ArithmeticSharedTensor(object):
             # Validate
             if validate:
                 if not torch.lt(
-                    torch.abs(self.get_plain_text() * y - tensor), tolerance
+                        torch.abs(self.get_plain_text() * y - tensor), tolerance
                 ).all():
                     raise ValueError("Final result of division is incorrect.")
 
@@ -565,7 +571,7 @@ class ArithmeticSharedTensor(object):
             kernel_size, stride=stride, padding=padding, ceil_mode=ceil_mode
         )
         if isinstance(kernel_size, (int, float)):
-            pool_size = kernel_size**2
+            pool_size = kernel_size ** 2
         else:
             pool_size = kernel_size[0] * kernel_size[1]
         return z / pool_size
