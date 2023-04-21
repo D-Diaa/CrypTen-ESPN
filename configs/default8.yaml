@@ -5,7 +5,7 @@ debug:
   debug_mode: False
   validation_mode: False
 encoder:
-  precision_bits: 10
+  precision_bits: 8
 functions:
   max_method: "log_reduction"
 
@@ -13,11 +13,11 @@ functions:
   relu_method: "exact"
   poly_method: "florian"
   relu_coeffs:
-    - 0.31445312
+    - 0.2734375
     - 0.5
-    - 0.15625
+    - 0.17578125
     - 0
-    - -0.00292969
+    - -0.00390625
 
   # exponential function
   exp_iterations: 8
