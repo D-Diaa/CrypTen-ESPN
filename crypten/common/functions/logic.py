@@ -7,7 +7,7 @@
 
 import crypten
 from crypten.common.tensor_types import is_tensor
-
+from crypten.config import cfg
 
 __all__ = [
     "__eq__",
@@ -82,7 +82,14 @@ def abs(self):
 
 def relu(self):
     """Compute a Rectified Linear function on the input tensor."""
-    return self * self.ge(0)
+    if cfg.functions.relu_method == "exact":
+        return self * self.ge(0)
+    elif cfg.functions.relu_method == "poly":
+        coeffs = list(cfg.functions.relu_coeffs)
+        if cfg.functions.poly_method == "crypten":
+            return self.polynomial(coeffs[1:]).add(coeffs[0])
+        else:
+            return self.polynomial(coeffs)
 
 
 def hardtanh(self, min_value=-1, max_value=1):
