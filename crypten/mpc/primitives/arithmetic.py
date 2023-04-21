@@ -608,6 +608,14 @@ class ArithmeticSharedTensor(object):
     def square(self):
         return self.clone().square_()
 
+    def honeybadger_pows(self, k):
+        return self.clone().honeybadger_pows_(k)
+
+    def honeybadger_pows_(self, k):
+        protocol = globals()[cfg.mpc.protocol]
+        ans = protocol.honeybadger_pows(self, k)
+        return ans
+
     def where(self, condition, y):
         """Selects elements from self or y based on condition
 

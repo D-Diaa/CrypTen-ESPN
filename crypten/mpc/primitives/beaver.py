@@ -126,6 +126,30 @@ def square(x):
     return r2 + 2 * r * epsilon + epsilon * epsilon
 
 
+def honeybadger_pows(x, k):
+    """Computes the powers of `x` for additively secret-shared tensor `x`
+    """
+    rank = crypten.comm.get().get_rank()
+    provider = crypten.mpc.get_default_provider()
+    bs = provider.kpows(x.size(), k, device=x.device)
+    with IgnoreEncodings([x, bs]):
+        C = (x - bs[0]).reveal()
+    prev = torch.ones((k + 1, *x.size()), dtype=torch.int64, device=x.device) * rank
+    curr = torch.zeros((k + 1, *x.size()), dtype=torch.int64, device=x.device)
+    pows = torch.zeros((k, *x.size()), dtype=torch.int64, device=x.device)
+    bs = bs.share
+    for m in range(1, k + 1):
+        s = 0
+        curr[0] = bs[m - 1]
+        for i in range(1, m + 1):
+            s += prev[i - 1]
+            curr[i] = C * s + bs[m - 1]
+        pows[m - 1] = curr[m]
+        prev = curr
+    pows = crypten.mpc.primitives.arithmetic.ArithmeticSharedTensor.from_shares(pows, device=x.device)
+    return pows
+
+
 def wraps(x):
     """Privately computes the number of wraparounds for a set a shares
 
@@ -163,7 +187,7 @@ def truncate(x, y):
     # NOTE: The multiplication here must be split into two parts
     # to avoid long out-of-bounds when y <= 2 since (2 ** 63) is
     # larger than the largest long integer.
-    correction = wrap_count * 4 * (int(2**62) // y)
+    correction = wrap_count * 4 * (int(2 ** 62) // y)
     x.share -= correction.share
     return x
 
