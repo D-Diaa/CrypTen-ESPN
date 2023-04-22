@@ -108,6 +108,7 @@ class Communicator:
         self.comm_rounds = 0
         self.comm_bytes = 0
         self.comm_time = 0
+        self.func_calls = {}
 
     def print_communication_stats(self):
         """
@@ -124,6 +125,7 @@ class Communicator:
         crypten.log("Rounds: {}".format(self.comm_rounds))
         crypten.log("Bytes: {}".format(self.comm_bytes))
         crypten.log("Communication time: {}".format(self.comm_time))
+        crypten.log("Communication functions: {}".format(self.func_calls))
 
     def get_communication_stats(self):
         """
@@ -138,12 +140,19 @@ class Communicator:
             "rounds": self.comm_rounds,
             "bytes": self.comm_bytes,
             "time": self.comm_time,
+            "funcs": self.func_calls
         }
 
     def _log_communication(self, nelement):
         """Updates log of communication statistics."""
         self.comm_rounds += 1
         self.comm_bytes += nelement * self.BYTES_PER_ELEMENT
+
+    def _log_func(self, name):
+        if name in self.func_calls:
+            self.func_calls[name] += 1
+        else:
+            self.func_calls[name] = 1
 
     def _log_communication_time(self, comm_time):
         self.comm_time += comm_time
@@ -176,7 +185,7 @@ def _logging(func):
         if cfg.communicator.verbose:
             rank = self.get_rank()
             _log = self._log_communication
-
+            _logf = self._log_func
             # count number of bytes communicates for each MPI collective:
             if func.__name__ == "barrier":
                 _log(0)
@@ -228,7 +237,7 @@ def _logging(func):
             if func.__name__ == "recv_obj":
                 _log(sys.getsizeof(result) / self.BYTES_PER_ELEMENT)
                 # party receives 1 object
-
+            _logf(func.__name__)
             return result
 
         return func(self, *args, **kwargs)

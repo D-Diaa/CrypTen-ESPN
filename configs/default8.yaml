@@ -1,5 +1,5 @@
 communicator:
-  verbose: False
+  verbose: True
   delay: 0
 debug:
   debug_mode: False
