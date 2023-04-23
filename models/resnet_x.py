@@ -40,24 +40,19 @@ class ConvNet(nn.Module):
         self.bn2 = nn.BatchNorm2d(16)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, num_classes)
-        self.relu1 = nn.ReLU()
-        self.relu2 = nn.ReLU()
-        self.relu3 = nn.ReLU()
-
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-
-        x = self.pool(self.relu1(self.bn1(self.conv1(x))))
-        x = self.pool(self.relu2(self.bn2(self.conv2(x))))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
-        x = self.relu3(self.fc1(x))
+        x = self.pool(self.relu(self.bn1(self.conv1(x))))
+        x = self.pool(self.relu(self.bn2(self.conv2(x))))
+        x = torch.flatten(x, 1)  # flatten all dimensions except batch
+        x = self.relu(self.fc1(x))
         x = self.fc2(x)
         return x
 
 
 class MiniONN(nn.Module):
-    def __init__(self,num_classes=10,to_quant: bool = False):
+    def __init__(self, num_classes=10, to_quant: bool = False, init_weights=True):
         super().__init__()
 
         self.to_quant = to_quant
@@ -77,17 +72,13 @@ class MiniONN(nn.Module):
         self.mean_pooling = nn.AvgPool2d(kernel_size=(2, 2))
 
         self.relu = nn.ReLU()
-
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.loss = torch.nn.CrossEntropyLoss()
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-                # nn.init.constant_(m.weight, 0.00001)
-            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
+        if init_weights:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+                elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         if self.to_quant:
@@ -111,8 +102,6 @@ class MiniONN(nn.Module):
 
 
 def _weights_init(m):
-    # classname = m.__class__.__name__
-    # print(classname)
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
         init.kaiming_normal_(m.weight)
 
@@ -159,7 +148,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes=10, init_weights=True):
         super(ResNet, self).__init__()
         self.in_planes = 16
 
@@ -174,13 +163,14 @@ class ResNet(nn.Module):
         self.quant = torch.quantization.QuantStub()
         self.dequant = torch.quantization.DeQuantStub()
         self.avgpool2d = nn.AdaptiveAvgPool2d((1, 1))
-        self.apply(_weights_init)
+        if init_weights:
+            self.apply(_weights_init)
 
     def quantize(self):
         self.quantized = True
 
     def _make_layer(self, block, planes, num_blocks, stride):
-        strides = [stride] + [1]*(num_blocks-1)
+        strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride))
@@ -196,13 +186,7 @@ class ResNet(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        if self.quantized:
-            out = self.avgpool2d(out)
-        else:
-            sh = out.shape[3]
-            if isinstance(sh, torch.Tensor):
-                sh = sh.item()
-            out = F.avg_pool2d(out, sh)
+        out = self.avgpool2d(out)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
 
@@ -212,28 +196,28 @@ class ResNet(nn.Module):
         return out
 
 
-def resnet20(num_classes):
-    return ResNet(BasicBlock, [3, 3, 3], num_classes)
+def resnet20(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [3, 3, 3], num_classes, init_weights=init_weights)
 
 
-def resnet32(num_classes):
-    return ResNet(BasicBlock, [5, 5, 5], num_classes)
+def resnet32(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [5, 5, 5], num_classes, init_weights=init_weights)
 
 
-def resnet44(num_classes):
-    return ResNet(BasicBlock, [7, 7, 7], num_classes)
+def resnet44(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [7, 7, 7], num_classes, init_weights=init_weights)
 
 
-def resnet56(num_classes):
-    return ResNet(BasicBlock, [9, 9, 9], num_classes)
+def resnet56(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [9, 9, 9], num_classes, init_weights=init_weights)
 
 
-def resnet110(num_classes):
-    return ResNet(BasicBlock, [18, 18, 18], num_classes)
+def resnet110(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [18, 18, 18], num_classes, init_weights=init_weights)
 
 
-def resnet1202(num_classes):
-    return ResNet(BasicBlock, [200, 200, 200], num_classes)
+def resnet1202(num_classes, init_weights=True):
+    return ResNet(BasicBlock, [200, 200, 200], num_classes, init_weights=init_weights)
 
 
 def test(net):
@@ -243,7 +227,7 @@ def test(net):
     for x in filter(lambda p: p.requires_grad, net.parameters()):
         total_params += np.prod(x.data.numpy().shape)
     print("Total number of params", total_params)
-    print("Total layers", len(list(filter(lambda p: p.requires_grad and len(p.data.size())>1, net.parameters()))))
+    print("Total layers", len(list(filter(lambda p: p.requires_grad and len(p.data.size()) > 1, net.parameters()))))
 
 
 if __name__ == "__main__":
