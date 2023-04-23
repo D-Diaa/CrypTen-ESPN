@@ -9,20 +9,20 @@ import logging
 import os
 import random
 import shutil
-import tempfile
 import time
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
+from torchvision import datasets, transforms
+
+import crypten
+import crypten.communicator as comm
 from examples.meters import AverageMeter
 from examples.util import NoopContextManager
-from torchvision import datasets, transforms
 
 
 def run_mpc_cifar(
@@ -46,8 +46,7 @@ def run_mpc_cifar(
 
     crypten.init()
 
-    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    device = 'cuda:0'
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # create model
     model = LeNet()
@@ -141,7 +140,6 @@ def run_mpc_cifar(
             },
             is_best,
         )
-    data_dir.cleanup()
 
 
 def train(train_loader, model, criterion, optimizer, epoch, print_freq=10, device=torch.device('cpu')):
