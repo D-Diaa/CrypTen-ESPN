@@ -35,7 +35,7 @@ parser.add_argument(
     default=1,
     type=int,
     metavar="N",
-    help="print frequency (default: 10)",
+    help="print frequency (default: 1)",
 )
 parser.add_argument(
     "--model-location",
@@ -56,8 +56,16 @@ parser.add_argument(
     "--dataset",
     default="cifar10",
     type=str,
-    choices=["cifdar10", "cifar100", "imagenet"],
+    choices=["cifar10", "cifar100", "imagenet"],
     help="evaluation dataset",
+)
+
+parser.add_argument(
+    "--config",
+    default="configs/default.yaml",
+    type=str,
+    metavar="PATH",
+    help="path to latest crypten config",
 )
 
 parser.add_argument(
@@ -70,7 +78,7 @@ parser.add_argument(
     help="Run example in multiprocess mode",
 )
 parser.add_argument(
-    "--use_cuda",
+    "--use-cuda",
     default=False,
     action="store_true",
     help="Run example on gpu",
@@ -93,6 +101,8 @@ parser.add_argument(
     action="store_true",
     help="evaluate private model separately",
 )
+
+
 def _run_experiment(args):
     # only import here to initialize crypten within the subprocesses
     from examples.mpc_inference.mpc_inference import run_mpc_model
@@ -103,6 +113,7 @@ def _run_experiment(args):
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
     run_mpc_model(
+        config = args.config,
         batch_size=args.batch_size,
         print_freq=args.print_freq,
         model_location=args.model_location,

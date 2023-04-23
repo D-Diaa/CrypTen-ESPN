@@ -20,6 +20,7 @@ from torchvision import datasets, transforms
 
 import crypten
 import crypten.communicator as comm
+from crypten.config import cfg
 from datasets.cifar import CIFAR10
 from examples.meters import AverageMeter
 
@@ -85,6 +86,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
 
 
 def run_mpc_model(
+        config = "",
         batch_size=1,
         print_freq=10,
         model_location="",
@@ -99,6 +101,8 @@ def run_mpc_model(
     if seed is not None:
         random.seed(seed)
         torch.manual_seed(seed)
+
+    cfg.load_config(config)
 
     val_loader, num_classes = get_dataset(dataset, batch_size)
 

@@ -11,7 +11,7 @@ functions:
 
   # relu function: exact, poly
   relu_method: "exact"
-  poly_method: "florian"
+  poly_method: "crypten"
   relu_coeffs:
     - 0.31445312
     - 0.5
