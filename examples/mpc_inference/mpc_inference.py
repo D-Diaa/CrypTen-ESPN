@@ -11,6 +11,7 @@ import random
 import time
 from datetime import timedelta
 
+import numpy
 import torch
 import torch.nn as nn
 import torch.optim
@@ -30,6 +31,12 @@ from torchvision.models.resnet import resnet50
 from models.vgg import ModulusNet_vgg16_bn as vgg16_bn
 from models.vgg import ModulusNet_vgg16 as vgg16
 from models.PolynomialEvaluator import PolynomialEvaluator
+
+
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2 ** 32
+    numpy.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 
 def replace_relus(model, evaluator=None):
@@ -66,9 +73,17 @@ def build_model(model_type: str = "resnet18", num_classes=None):
 
 
 def get_dataset(datatset_name: str = "cifar10", batch_size=1):
+    g = torch.Generator()
+    g.manual_seed(0)
     if datatset_name == "cifar10":
         dataset = CIFAR10(root="data/cifar10")
-        val_loader = dataset.get_dataloader('valid', batch_size=batch_size, num_workers=2, pin_memory=False)
+        val_loader = dataset.get_dataloader('valid',
+                                            shuffle=False,
+                                            batch_size=batch_size,
+                                            num_workers=2,
+                                            pin_memory=False,
+                                            worker_init_fn=seed_worker,
+                                            generator=g)
         num_classes = 10
     elif datatset_name == "cifar100":
         transform = transforms.Compose([transforms.ToTensor(),
@@ -76,8 +91,12 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
                                                              (0.2023, 0.1994, 0.2010))])
         dataset = datasets.CIFAR100(root="data/cifar100", transform=transform, train=False, download=True)
         val_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=batch_size, num_workers=2, pin_memory=False
-        )
+            dataset, batch_size=batch_size,
+            shuffle=False,
+            num_workers=2,
+            pin_memory=False,
+            worker_init_fn=seed_worker,
+            generator=g)
         num_classes = 100
     elif datatset_name == "imagenet":
         # define appropriate transforms:
@@ -92,15 +111,18 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
         dataset = datasets.ImageNet(root="data/imagenet", transform=transform, split="val", download=True)
 
         val_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=batch_size, num_workers=2, pin_memory=False
-        )
+            dataset, batch_size=batch_size,
+            shuffle=False,
+            num_workers=2,
+            pin_memory=False,
+            worker_init_fn=seed_worker,
+            generator=g)
         num_classes = 1000
 
     return val_loader, num_classes
 
 
 def run_mpc_model(
-        config="",
         batch_size=1,
         n_batches=None,
         print_freq=10,
@@ -116,8 +138,7 @@ def run_mpc_model(
     if seed is not None:
         random.seed(seed)
         torch.manual_seed(seed)
-
-    cfg.load_config(config)
+        numpy.random.seed(seed)
 
     val_loader, num_classes = get_dataset(dataset, batch_size)
 
@@ -150,9 +171,8 @@ def run_mpc_model(
     if evaluate_separately:
         logging.info("===== Evaluating Private LeNet network =====")
         validate(val_loader, private_model, criterion, print_freq)
-    else:
-        logging.info("===== Validating side-by-side ======")
-        validate_side_by_side(val_loader, model, private_model, device, n_batches)
+    logging.info("===== Validating side-by-side ======")
+    return validate_side_by_side(val_loader, model, private_model, device, n_batches)
 
 
 def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_batches=None):
@@ -168,7 +188,6 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
     inference_time = AverageMeter()
     communication_time = AverageMeter()
     total_time = AverageMeter()
-
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
             input = input.to(device)
@@ -226,9 +245,20 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             logging.info("Comtime    {:.3f} ({:.3f})".format(comm_stats['time'], communication_time.value()))
             logging.info("Runtime(T) {:.3f} ({:.3f})".format(time_diff, total_time.value()))
             # only use the first 1000 examples
-            if n_batches is not None and i >= n_batches:
+            if n_batches is not None and i + 1 >= n_batches:
                 break
-    # TODO: results
+    comm_stats.pop("time")
+    results = {
+        "enc_acc": accuracy_enc.value().item(),
+        "pla_acc": accuracy_plain.value().item(),
+        "match": match.value().item(),
+        "error": average_error.value().item(),
+        "comm_time": communication_time.value(),
+        "run_time": total_time.value(),
+        "run_time_amortized": inference_time.value(),
+        "comm": comm_stats
+    }
+    return results
 
 
 def get_input_size(val_loader):

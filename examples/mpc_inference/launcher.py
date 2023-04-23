@@ -9,9 +9,11 @@
 import argparse
 import logging
 import os
-
+import yaml
 import torch
-
+import ntpath
+import shutil
+from crypten.config import cfg
 from examples.multiprocess_launcher import MultiProcessLauncher
 
 parser = argparse.ArgumentParser(description="CrypTen Multidataset Inference")
@@ -31,7 +33,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--n-batches",
-    default=5,
+    default=None,
     type=int,
     metavar="N",
     help="num of batches to evaluate",
@@ -75,8 +77,10 @@ parser.add_argument(
     help="path to latest crypten config",
 )
 
+parser.add_argument('-d', '--delays', nargs='+', help='delays for experiments', type=float, default=[0.0, 0.05])
+
 parser.add_argument(
-    "--seed", default=None, type=int, help="seed for initializing training. "
+    "--seed", default=0, type=int, help="seed for initializing training. "
 )
 parser.add_argument(
     "--multiprocess",
@@ -113,26 +117,52 @@ parser.add_argument(
 def _run_experiment(args):
     # only import here to initialize crypten within the subprocesses
     from examples.mpc_inference.mpc_inference import run_mpc_model
-    device = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
     # Only Rank 0 will display logs.
     level = logging.INFO
-    if "RANK" in os.environ and os.environ["RANK"] != "0":
+    rank = os.environ['RANK']
+    if rank != "0":
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
-    run_mpc_model(
-        config = args.config,
-        batch_size=args.batch_size,
-        n_batches = args.n_batches,
-        print_freq=args.print_freq,
-        model_location=args.model_location,
-        model_type=args.model_type,
-        dataset=args.dataset,
-        seed=args.seed,
-        skip_plaintext=args.skip_plaintext,
-        resume=args.resume,
-        evaluate_separately=args.evaluate_separately,
-        device=device
-    )
+    # Device and config
+    device = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
+    cfg.load_config(args.config)
+    # Naming
+    cfg_name = ntpath.basename(args.config).split(".")[0]
+    model_name = args.model_type
+    if args.resume:
+        model_name = ntpath.basename(args.model_location).split(".")[0]
+    results_path = f"results/{args.dataset}/{model_name}_{device}"
+    os.makedirs(results_path, exist_ok=True)
+    shutil.copyfile(args.config, f"{results_path}/{cfg_name}.yaml")
+    results = None
+    for delay in args.delays:
+        cfg.communicator.delay = delay
+        _results = run_mpc_model(
+            batch_size=args.batch_size,
+            n_batches=args.n_batches,
+            print_freq=args.print_freq,
+            model_location=args.model_location,
+            model_type=args.model_type,
+            dataset=args.dataset,
+            seed=args.seed,
+            skip_plaintext=args.skip_plaintext,
+            resume=args.resume,
+            evaluate_separately=args.evaluate_separately,
+            device=device
+        )
+        if results is None:
+            results = _results
+            for key in ["comm_time", "run_time", "run_time_amortized"]:
+                results[key] = [results[key]]
+        else:
+            for key in ["comm_time", "run_time", "run_time_amortized"]:
+                results[key].append(_results[key])
+    results['delays'] = args.delays
+    # with open(f"{results_path}/{cfg_name}_result_{rank}.yaml", "w") as f:
+    #     yaml.dump(results, f)
+    if rank == 0:
+        with open(f"{results_path}/{cfg_name}_result.yaml", "w") as f:
+            yaml.dump(results, f)
 
 
 def main(run_experiment):
