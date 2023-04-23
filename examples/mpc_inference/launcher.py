@@ -120,7 +120,7 @@ def _run_experiment(args):
     # Only Rank 0 will display logs.
     level = logging.INFO
     rank = os.environ['RANK']
-    if rank != "0":
+    if int(rank) != 0:
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
     # Device and config
@@ -160,7 +160,7 @@ def _run_experiment(args):
     results['delays'] = args.delays
     # with open(f"{results_path}/{cfg_name}_result_{rank}.yaml", "w") as f:
     #     yaml.dump(results, f)
-    if rank == 0:
+    if int(rank) == 0:
         with open(f"{results_path}/{cfg_name}_result.yaml", "w") as f:
             yaml.dump(results, f)
 
