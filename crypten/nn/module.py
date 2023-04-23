@@ -847,7 +847,6 @@ __module_list_func_names = [
     "extend",
 ]
 
-
 for func_name in __module_list_func_names:
     func = getattr(torch.nn.ModuleList, func_name)
     setattr(ModuleList, func_name, func)
@@ -916,7 +915,6 @@ __module_dict_func_names = [
     "update",
     "forward",
 ]
-
 
 for func_name in __module_dict_func_names:
     func = getattr(torch.nn.ModuleDict, func_name)
@@ -1585,7 +1583,7 @@ class Reshape(Module):
             tensor, shape = tensor
         shape = shape if shape is not None else self.shape
         assert (
-            shape is not None
+                shape is not None
         ), "Reshape requires a shape in forward if not supplied in initialization"
         if torch.is_tensor(shape):
             shape = torch.Size(shape.long())
@@ -2114,15 +2112,15 @@ class Conv1d(Module):
     """  # noqa: W605
 
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        groups=1,
-        bias=True,
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=1,
+            padding=0,
+            dilation=1,
+            groups=1,
+            bias=True,
     ):
 
         # check inputs:
@@ -2253,15 +2251,15 @@ class Conv2d(Module):
     """
 
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        groups=1,
-        bias=True,
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=1,
+            padding=0,
+            dilation=1,
+            groups=1,
+            bias=True,
     ):
         # check inputs:
         super().__init__()
@@ -2692,7 +2690,7 @@ class AdaptiveAvgPool2d(Module):
         if output_size is None:
             output_size = self.output_size
         assert (
-            output_size is not None
+                output_size is not None
         ), "AdaptiveAvgPool2d requires an output_size in forward if not supplied in initialization"
         resized_input, args, kwargs = _adaptive_pool2d_helper(
             input_tensor, output_size, reduction="mean"
@@ -2745,7 +2743,7 @@ class AdaptiveMaxPool2d(Module):
         if output_size is None:
             output_size = self.output_size
         assert (
-            output_size is not None
+                output_size is not None
         ), "AdaptiveMaxPool2d requires an output_size in forward if not supplied in initialization"
         resized_input, args, kwargs = _adaptive_pool2d_helper(
             input_tensor, output_size, reduction="max"
@@ -2963,7 +2961,7 @@ def _all_the_same(items):
 
 
 def _identify_bool_attributes_with_defaults(
-    attributes, attr_name, attr_value, default=True
+        attributes, attr_name, attr_value, default=True
 ):
     """For boolean attributes that have default values in the ONNX specification
     checks to see if they are present in `attributes`, and assigns the
@@ -2974,3 +2972,12 @@ def _identify_bool_attributes_with_defaults(
     if attr_name in attributes and attributes[attr_name] != attr_value:
         output = not default
     return output
+
+
+class Identity(Module):
+    def forward(self, input):
+        return input
+
+    @staticmethod
+    def from_onnx(attributes=None):
+        return Identity()
