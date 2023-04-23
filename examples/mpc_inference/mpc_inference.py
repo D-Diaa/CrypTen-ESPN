@@ -29,19 +29,33 @@ from models.resnet_x import resnet32, resnet110, MiniONN
 from torchvision.models.resnet import resnet50
 from models.vgg import ModulusNet_vgg16_bn as vgg16_bn
 from models.vgg import ModulusNet_vgg16 as vgg16
+from models.PolynomialEvaluator import PolynomialEvaluator
+
+
+def replace_relus(model, evaluator=None):
+    if cfg.functions.relu_method != "poly":
+        return
+    if not isinstance(model, torch.nn.Module):
+        return
+    if evaluator is None:
+        evaluator = PolynomialEvaluator(list(cfg.functions.relu_coeffs))
+    if hasattr(model, "relu") and not isinstance(getattr(model, "relu"), torch.nn.Identity):
+        setattr(model, "relu", evaluator)
+    for module in model.children():
+        replace_relus(module, evaluator)
 
 
 def build_model(model_type: str = "resnet18", num_classes=None):
     if model_type == "resnet18":
         model = resnet18(num_classes=num_classes)
     elif model_type == "resnet32":
-        model = resnet32(num_classes=num_classes)
+        model = resnet32(num_classes=num_classes, init_weights=False)
     elif model_type == "resnet50":
         model = resnet50(num_classes=num_classes)
     elif model_type == "resnet110":
-        model = resnet110(num_classes=num_classes)
+        model = resnet110(num_classes=num_classes, init_weights=False)
     elif model_type == "minionn":
-        model = MiniONN(num_classes=num_classes)
+        model = MiniONN(num_classes=num_classes, init_weights=False)
     elif model_type == "vgg16_bn":
         model = vgg16_bn(num_classes=num_classes)
     elif model_type == "vgg16":
@@ -86,8 +100,9 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
 
 
 def run_mpc_model(
-        config = "",
+        config="",
         batch_size=1,
+        n_batches=None,
         print_freq=10,
         model_location="",
         model_type="",
@@ -131,12 +146,13 @@ def run_mpc_model(
         validate(val_loader, model, criterion, print_freq)
     input_size = get_input_size(val_loader)
     private_model = construct_private_model(input_size, model, model_type, num_classes, device=device)
+    replace_relus(model)
     if evaluate_separately:
         logging.info("===== Evaluating Private LeNet network =====")
         validate(val_loader, private_model, criterion, print_freq)
     else:
         logging.info("===== Validating side-by-side ======")
-        validate_side_by_side(val_loader, model, private_model, device)
+        validate_side_by_side(val_loader, model, private_model, device, n_batches)
 
 
 def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_batches=None):

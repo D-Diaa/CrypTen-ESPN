@@ -30,6 +30,13 @@ parser.add_argument(
     help="mini-batch size (default: 256)",
 )
 parser.add_argument(
+    "--n-batches",
+    default=5,
+    type=int,
+    metavar="N",
+    help="num of batches to evaluate",
+)
+parser.add_argument(
     "--print-freq",
     "-p",
     default=1,
@@ -115,6 +122,7 @@ def _run_experiment(args):
     run_mpc_model(
         config = args.config,
         batch_size=args.batch_size,
+        n_batches = args.n_batches,
         print_freq=args.print_freq,
         model_location=args.model_location,
         model_type=args.model_type,
