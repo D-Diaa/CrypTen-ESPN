@@ -158,6 +158,7 @@ ONNX_TO_CRYPTEN = {
     "Relu": module.ReLU,
     "ReduceMean": module.Mean,
     "ReduceSum": module.Sum,
+    "Identity": module.Identity
 }
 
 
