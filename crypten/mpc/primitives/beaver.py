@@ -146,7 +146,7 @@ def honeybadger_pows(x, k):
             curr[i] = C * s + bs[m - 1]
         pows[m - 1] = curr[m]
         prev = curr
-    pows = crypten.mpc.primitives.arithmetic.ArithmeticSharedTensor.from_shares(pows, device=x.device)
+    pows = crypten.mpc.MPCTensor.from_shares(pows, precision=x.encoder._precision_bits)
     return pows
 
 
