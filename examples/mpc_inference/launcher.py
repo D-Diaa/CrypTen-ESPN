@@ -124,7 +124,8 @@ def _run_experiment(args):
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
     # Device and config
-    device = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
+    device_id = rank if torch.cuda.device_count() > 1 else 0
+    device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() and args.use_cuda else "cpu")
     cfg.load_config(args.config)
     # Naming
     cfg_name = ntpath.basename(args.config).split(".")[0]
