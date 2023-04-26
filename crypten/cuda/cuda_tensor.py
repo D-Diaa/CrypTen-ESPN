@@ -36,7 +36,7 @@ class CUDALongTensor(object):
     """
 
     __BITS = torch.iinfo(torch.long).bits
-    __DEFAULT_NBLOCKS = 3
+    __DEFAULT_NBLOCKS = 4
     __BLOCK_SIZE = {3: None, 4: None}  # Number of bits per block
     __INDICES = {3: [], 4: []}
     __SHIFTS = {3: [], 4: []}
