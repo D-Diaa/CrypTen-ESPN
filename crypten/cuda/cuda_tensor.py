@@ -36,11 +36,11 @@ class CUDALongTensor(object):
     """
 
     __BITS = torch.iinfo(torch.long).bits
-    __DEFAULT_NBLOCKS = 4
-    __BLOCK_SIZE = {3: None, 4: None}  # Number of bits per block
-    __INDICES = {3: [], 4: []}
-    __SHIFTS = {3: [], 4: []}
-    for nblocks in [3, 4]:
+    __DEFAULT_NBLOCKS = 5
+    __BLOCK_SIZE = {3: None, 4: None, __DEFAULT_NBLOCKS: None}  # Number of bits per block
+    __INDICES = {3: [], 4: [], __DEFAULT_NBLOCKS: []}
+    __SHIFTS = {3: [], 4: [], __DEFAULT_NBLOCKS: []}
+    for nblocks in [3, 4, __DEFAULT_NBLOCKS]:
         __BLOCK_SIZE[nblocks] = math.ceil(__BITS / nblocks)
         for i in range(nblocks):
             for j in range(nblocks):
@@ -83,7 +83,7 @@ class CUDALongTensor(object):
         if kwargs is None:
             kwargs = {}
         if func not in HANDLED_FUNCTIONS or not all(
-            issubclass(t, (torch.Tensor, CUDALongTensor)) for t in types
+                issubclass(t, (torch.Tensor, CUDALongTensor)) for t in types
         ):
             args = [t.tensor() if hasattr(t, "tensor") else t for t in args]
             result = func(*args, **kwargs)
@@ -162,7 +162,7 @@ class CUDALongTensor(object):
         bks = CUDALongTensor.__BLOCK_SIZE[num_blocks]
 
         x_block = CUDALongTensor.stack(
-            [(x >> (bks * i)) & (2**bks - 1) for i in range(nb)]
+            [(x >> (bks * i)) & (2 ** bks - 1) for i in range(nb)]
         )
 
         return x_block.double()
@@ -191,16 +191,17 @@ class CUDALongTensor(object):
         if "groups" in kwargs:
             groups = kwargs["groups"]
             assert (
-                groups == 1
+                    groups == 1
             ), f"more than one group is unsupported on GPU (groups = {groups})"
             del kwargs["groups"]
 
         bs, c, *img = x.size()
         c_out, c_in, *ks = y.size()
-        kernel_elements = functools.reduce(operator.mul, ks)
+        # kernel_elements = functools.reduce(operator.mul, ks)
 
-        nb = 3 if kernel_elements < 256 else 4
-        nb2 = nb**2
+        # nb = 3 if kernel_elements < 256 else (4 if kernel_elements < 2 ** 20 else 5)
+        nb = CUDALongTensor.__DEFAULT_NBLOCKS
+        nb2 = nb ** 2
 
         x_encoded = CUDALongTensor.__encode_as_fp64(x, nb).data
         y_encoded = CUDALongTensor.__encode_as_fp64(y, nb).data
@@ -242,7 +243,10 @@ class CUDALongTensor(object):
     @implements(torch.matmul)
     def matmul(x, y, *args, **kwargs):
         # Use 4 blocks if each dot product is 256 elements or larger to prevent overflow in the sum
-        nb = 3 if x.size(-1) < 256 else 4
+        # nb = 3 if x.size(-1) < 256 else (4 if x.size(-1) < 2 ** 20 else 5)
+
+        # nb = 3 if x.size(-1) < 256 else 4
+        nb = CUDALongTensor.__DEFAULT_NBLOCKS
 
         # Prepend 1 to the dimension of x or y if it is 1-dimensional
         remove_x, remove_y = False, False
@@ -330,7 +334,7 @@ class CUDALongTensor(object):
         z = z.sum(0)
 
         if isinstance(kernel_size, (int, float)):
-            pool_size = kernel_size**2
+            pool_size = kernel_size ** 2
         else:
             pool_size = kernel_size[0] * kernel_size[1]
 
