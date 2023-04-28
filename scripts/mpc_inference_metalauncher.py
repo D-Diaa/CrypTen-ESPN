@@ -1,20 +1,41 @@
 import os
 
-delays = ["0.0", "0.01"]
-models = ["resnet18", "resnet32", ]
-datasets = ["cifar10"]
 config_folder = "configs"
-configs = ["default16.yaml", "crypten10.yaml",]
-device_commands = ["", "--use-cuda"]
-base_command = "python3 examples/mpc_inference/launcher.py --multiprocess --world_size 2 --n-batches 3 --skip-plaintext"
+models_folder = "/home/a2diaa/trained_models/best_models"
+batch_size = 64
+
+delays = ["0.0"]
+models = ["resnet18", "resnet32"]#, "resnet110"]
+datasets = ["cifar10", "cifar100"]
+
+# configs = ["default16.yaml", "crypten10.yaml", "honeybadger10.yaml", "honeybadger8.yaml", "default10.yaml"]
+configs = ["florian12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yaml"]
+
+device_commands = ["--use-cuda"]
+
+base_command = f"python3 examples/mpc_inference/launcher.py --multiprocess --world_size 2 " \
+               f"--n-batches 50 " \
+               f"--skip-plaintext " \
+               f"--batch-size {batch_size}"
+
 base_command += " --delays " + " ".join(delays)
 
 for dataset in datasets:
     for model in models:
-        for device_cmd in device_commands:
-            for config in configs:
+        cmd = None
+        for model_file in os.listdir(models_folder):
+            if model_file.endswith(".pth") and model_file.startswith(f"{model}_{dataset}_"):
                 cmd = base_command + f" --dataset {dataset}" \
-                                     f" --model-type {model}" \
-                                     f" --config {config_folder}/{config}" \
-                                     f" {device_cmd}"
-                os.system(cmd)
+                                     f" --model-type {model} " \
+                                     f"--resume " \
+                                     f"--model-location {models_folder}/{model_file}"
+                break
+            else:
+                continue
+                # cmd = base_command + f" --dataset {dataset}" \
+                #                      f" --model-type {model} "
+        if cmd is not None:
+            for device_cmd in device_commands:
+                for config in configs:
+                    cmd += f" --config {config_folder}/{config} {device_cmd}"
+                    os.system(cmd)
