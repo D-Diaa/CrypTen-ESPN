@@ -37,10 +37,10 @@ class CUDALongTensor(object):
 
     __BITS = torch.iinfo(torch.long).bits
     __DEFAULT_NBLOCKS = 5
-    __BLOCK_SIZE = {3: None, 4: None, __DEFAULT_NBLOCKS: None}  # Number of bits per block
-    __INDICES = {3: [], 4: [], __DEFAULT_NBLOCKS: []}
-    __SHIFTS = {3: [], 4: [], __DEFAULT_NBLOCKS: []}
-    for nblocks in [3, 4, __DEFAULT_NBLOCKS]:
+    __BLOCK_SIZE = {3: None, 4: None, 5: None}  # Number of bits per block
+    __INDICES = {3: [], 4: [], 5: []}
+    __SHIFTS = {3: [], 4: [], 5: []}
+    for nblocks in [3, 4, 5]:
         __BLOCK_SIZE[nblocks] = math.ceil(__BITS / nblocks)
         for i in range(nblocks):
             for j in range(nblocks):
@@ -197,10 +197,10 @@ class CUDALongTensor(object):
 
         bs, c, *img = x.size()
         c_out, c_in, *ks = y.size()
-        # kernel_elements = functools.reduce(operator.mul, ks)
+        kernel_elements = functools.reduce(operator.mul, ks)
 
-        # nb = 3 if kernel_elements < 256 else (4 if kernel_elements < 2 ** 20 else 5)
-        nb = CUDALongTensor.__DEFAULT_NBLOCKS
+        nb = 4 if kernel_elements < 2**20 else 5
+        # nb = CUDALongTensor.__DEFAULT_NBLOCKS
         nb2 = nb ** 2
 
         x_encoded = CUDALongTensor.__encode_as_fp64(x, nb).data
@@ -245,8 +245,8 @@ class CUDALongTensor(object):
         # Use 4 blocks if each dot product is 256 elements or larger to prevent overflow in the sum
         # nb = 3 if x.size(-1) < 256 else (4 if x.size(-1) < 2 ** 20 else 5)
 
-        # nb = 3 if x.size(-1) < 256 else 4
-        nb = CUDALongTensor.__DEFAULT_NBLOCKS
+        nb = 4 if x.size(-1) < 2**20 else 5
+        # nb = CUDALongTensor.__DEFAULT_NBLOCKS
 
         # Prepend 1 to the dimension of x or y if it is 1-dimensional
         remove_x, remove_y = False, False
