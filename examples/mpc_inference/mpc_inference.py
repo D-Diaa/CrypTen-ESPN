@@ -248,6 +248,7 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             if n_batches is not None and i + 1 >= n_batches:
                 break
     comm_stats.pop("time")
+    runtime_confidence = total_time.mean_confidence_interval()
     results = {
         "enc_acc": accuracy_enc.value().item(),
         "pla_acc": accuracy_plain.value().item(),
@@ -255,6 +256,7 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
         "error": average_error.value().item(),
         "comm_time": communication_time.value(),
         "run_time": total_time.value(),
+        "run_time_confidence": runtime_confidence,
         "run_time_amortized": inference_time.value(),
         "comm": comm_stats
     }

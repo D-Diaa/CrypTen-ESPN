@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-
+import scipy
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
 import torch
+import numpy as np
 
 
 class AverageMeter:
@@ -17,10 +18,19 @@ class AverageMeter:
     def reset(self):
         self.sum = 0.0
         self.count = 0
+        self.values = []
 
     def add(self, value, n=1):
         self.sum += value * n
         self.count += n
+        self.values += [value] * n
+
+    def mean_confidence_interval(self, confidence=0.95):
+        a = 1.0 * np.array(self.values)
+        n = len(a)
+        m, se = np.mean(a), scipy.stats.sem(a)
+        h = se * scipy.stats.t.ppf((1 + confidence) / 2., n - 1)
+        return m, m - h, m + h
 
     def value(self):
         return self.sum / self.count
@@ -38,7 +48,6 @@ class AccuracyMeter:
         self.values = []
 
     def add(self, output, ground_truth):
-
         # compute predicted classes (ordered):
         _, prediction = output.topk(self.maxk, 1, True, True)
         prediction = prediction.t()
