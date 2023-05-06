@@ -151,7 +151,7 @@ def run_mpc_model(
         if os.path.isfile(model_location):
             logging.info("=> loading checkpoint '{}'".format(model_location))
             checkpoint = torch.load(model_location)
-            model.load_state_dict(checkpoint["state_dict"])
+            model.load_state_dict(checkpoint['model'])
             logging.info(
                 "=> loaded checkpoint '{}' (epoch {})".format(
                     model_location, checkpoint["epoch"]

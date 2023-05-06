@@ -133,8 +133,6 @@ def _run_experiment(args):
     if args.resume:
         model_name = ntpath.basename(args.model_location).split(".")[0]
     results_path = f"results/{args.dataset}/{model_name}_{device}"
-    os.makedirs(results_path, exist_ok=True)
-    shutil.copyfile(args.config, f"{results_path}/{cfg_name}.yaml")
     results = None
     for delay in args.delays:
         cfg.communicator.delay = delay
@@ -162,6 +160,8 @@ def _run_experiment(args):
     # with open(f"{results_path}/{cfg_name}_result_{rank}.yaml", "w") as f:
     #     yaml.dump(results, f)
     if int(rank) == 0:
+        os.makedirs(results_path, exist_ok=True)
+        shutil.copyfile(args.config, f"{results_path}/{cfg_name}.yaml")
         with open(f"{results_path}/{cfg_name}_result.yaml", "w") as f:
             yaml.dump(results, f)
 
