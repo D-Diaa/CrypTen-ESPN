@@ -62,7 +62,9 @@ def build_model(model_type: str = "resnet18", num_classes=None):
     elif model_type == "resnet110":
         model = resnet110(num_classes=num_classes, init_weights=False)
     elif model_type == "minionn":
-        model = MiniONN(num_classes=num_classes, init_weights=False)
+        model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=False)
+    elif model_type == "minionn_bn":
+        model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=True)
     elif model_type == "vgg16_bn":
         model = vgg16_bn(num_classes=num_classes)
     elif model_type == "vgg16":
@@ -248,7 +250,7 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             if n_batches is not None and i + 1 >= n_batches:
                 break
     comm_stats.pop("time")
-    runtime_confidence = total_time.mean_confidence_interval()
+    _, mmh, mph = total_time.mean_confidence_interval()
     results = {
         "enc_acc": accuracy_enc.value().item(),
         "pla_acc": accuracy_plain.value().item(),
@@ -256,7 +258,8 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
         "error": average_error.value().item(),
         "comm_time": communication_time.value(),
         "run_time": total_time.value(),
-        "run_time_confidence": runtime_confidence,
+        "run_time_95conf_lower": mmh.item(),
+        "run_time_95conf_upper": mph.item(),
         "run_time_amortized": inference_time.value(),
         "comm": comm_stats
     }
