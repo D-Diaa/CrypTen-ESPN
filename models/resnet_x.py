@@ -52,7 +52,7 @@ class ConvNet(nn.Module):
 
 
 class MiniONN(nn.Module):
-    def __init__(self, num_classes=10, to_quant: bool = False, init_weights=True):
+    def __init__(self, num_classes=10, to_quant: bool = False, init_weights=True, use_batch_norm=True):
         super().__init__()
 
         self.to_quant = to_quant
@@ -60,17 +60,24 @@ class MiniONN(nn.Module):
         self.dequant = torch.quantization.DeQuantStub()
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.bn1 = nn.BatchNorm2d(64)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.bn2 = nn.BatchNorm2d(64)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.bn3 = nn.BatchNorm2d(64)
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.bn4 = nn.BatchNorm2d(64)
         self.conv5 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.bn5 = nn.BatchNorm2d(64)
         self.conv6 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1))
+        self.bn6 = nn.BatchNorm2d(64)
         self.conv7 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=(1, 1), stride=(1, 1))
+        self.bn7 = nn.BatchNorm2d(16)
 
         self.fully_connected_layer = nn.Linear(in_features=1024, out_features=num_classes)
 
         self.mean_pooling = nn.AvgPool2d(kernel_size=(2, 2))
-
+        self.use_batch_norm = use_batch_norm
         self.relu = nn.ReLU()
         if init_weights:
             for m in self.modules():
@@ -83,14 +90,22 @@ class MiniONN(nn.Module):
     def forward(self, x):
         if self.to_quant:
             x = self.quant(x)
-
-        x = self.relu(self.conv1(x))
-        x = self.mean_pooling(self.relu(self.conv2(x)))
-        x = self.relu(self.conv3(x))
-        x = self.mean_pooling(self.relu(self.conv4(x)))
-        x = self.relu(self.conv5(x))
-        x = self.relu(self.conv6(x))
-        x = self.relu(self.conv7(x))
+        if self.use_batch_norm:
+            x = self.relu(self.bn1(self.conv1(x)))
+            x = self.mean_pooling(self.relu(self.bn2(self.conv2(x))))
+            x = self.relu(self.bn3(self.conv3(x)))
+            x = self.mean_pooling(self.relu(self.bn4(self.conv4(x))))
+            x = self.relu(self.bn5(self.conv5(x)))
+            x = self.relu(self.bn6(self.conv6(x)))
+            x = self.relu(self.bn7(self.conv7(x)))
+        else:
+            x = self.relu(self.conv1(x))
+            x = self.mean_pooling(self.relu(self.conv2(x)))
+            x = self.relu(self.conv3(x))
+            x = self.mean_pooling(self.relu(self.conv4(x)))
+            x = self.relu(self.conv5(x))
+            x = self.relu(self.conv6(x))
+            x = self.relu(self.conv7(x))
 
         x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = self.fully_connected_layer(x)
