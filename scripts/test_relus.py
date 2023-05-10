@@ -7,6 +7,8 @@ from datetime import timedelta
 from math import ceil
 
 import torch
+import yaml
+
 from crypten.config import cfg
 import crypten
 from examples.meters import AverageMeter
@@ -47,12 +49,12 @@ def timeit(fn, size):
     out = fn()
     end_time = time.monotonic()
     delta = timedelta(seconds=end_time - start_time)
-    time_diff = delta.seconds * 1e3 + delta.microseconds / 1e3
+    time_diff = delta.seconds + delta.microseconds / 1e6
     average_time_diff = time_diff / size
     return out, time_diff, average_time_diff, comm.get().get_communication_stats()
 
 
-def relu_compare_run(n_points=32768, repeats=200, delay=0.0, device=torch.device("cpu")):
+def relu_compare_run(n_points=32768, repeats=20, delay=0.0, device=torch.device("cpu")):
     cfg.load_config("configs/default12.yaml")
     cfg.communicator.delay = delay
 
@@ -149,16 +151,28 @@ def _run_experiment(args):
     if "RANK" in os.environ and os.environ["RANK"] != "0":
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
-    configs = ['crypten12', 'florian12', 'honeybagder12', 'default12']
+    configs = ['crypten12', 'florian12', 'honeybadger12', 'default12']
     n_points = 32768
     delays = [0.000125, 0.025, 0.05, 0.1]
     devices = [torch.device("cpu"), torch.device("cuda:0")]
+    aggregable_keys = ["run_time", "run_time_95conf_lower", "run_time_95conf_upper" ]
+
     for device in devices:
-        os.makedirs(f"results/relus/{device}")
+        all_results = {conf: {
+            key: [] for key in aggregable_keys
+        } for conf in configs}
+        os.makedirs(f"results/relus/{device}", exist_ok=True)
         for delay in delays:
             results = relu_compare_run(n_points=n_points, delay=delay, device=device)
-
-
+            for i, conf in enumerate(configs):
+                res = results[i].mean_confidence_interval()
+                for j, key in enumerate(aggregable_keys):
+                    all_results[conf][key].append(res[j].item())
+        if "RANK" in os.environ and os.environ["RANK"] == "0":
+            for conf in configs:
+                all_results[conf]['delays']=delays
+                with open(f"results/relus/{device}/{conf}_result.yaml", "w") as f:
+                    yaml.dump(all_results[conf], f)
 
 
 def main(run_experiment):
