@@ -49,6 +49,7 @@ functions:
   erf_iterations: 8
 mpc:
   real_shares: False
+  real_triplets: False
   active_security: False
   provider: "TFP"
   protocol: "beaver"
