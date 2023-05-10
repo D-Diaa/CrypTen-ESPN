@@ -18,12 +18,14 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 from torchvision import datasets, transforms
+from torchvision.transforms import InterpolationMode
 
 import crypten
 import crypten.communicator as comm
 from crypten.config import cfg
 from datasets.cifar import CIFAR10
 from examples.meters import AverageMeter
+from examples.mpc_inference import presets
 
 from models.resnet import resnet18
 from models.resnet_x import resnet32, resnet110, MiniONN
@@ -78,7 +80,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
     g = torch.Generator()
     g.manual_seed(0)
     if datatset_name == "cifar10":
-        dataset = CIFAR10(root="data/cifar10")
+        dataset = CIFAR10(root="/scratch/a2diaa/datasets/cifar10")
         val_loader = dataset.get_dataloader('valid',
                                             shuffle=False,
                                             batch_size=batch_size,
@@ -91,7 +93,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                              (0.2023, 0.1994, 0.2010))])
-        dataset = datasets.CIFAR100(root="data/cifar100", transform=transform, train=False, download=True)
+        dataset = datasets.CIFAR100(root="/scratch/a2diaa/datasets/cifar100", transform=transform, train=False, download=True)
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
             shuffle=False,
@@ -101,16 +103,12 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
             generator=g)
         num_classes = 100
     elif datatset_name == "imagenet":
-        # define appropriate transforms:
-        transform = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
+        interpolation = InterpolationMode("bilinear")
+        preprocessing = presets.ClassificationPresetEval(
+            crop_size=224, resize_size=232, interpolation=interpolation
         )
-        dataset = datasets.ImageNet(root="data/imagenet", transform=transform, split="val", download=True)
+
+        dataset = datasets.ImageFolder("/scratch/lprfenau/datasets/imagenet/val", preprocessing)
 
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
