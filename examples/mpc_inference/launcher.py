@@ -55,9 +55,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-type",
-    default="resnet18",
+    default="resnet32",
     type=str,
-    choices=["resnet18", "resnet32", "resnet50", "resnet110", "vgg16", "vgg16_bn", "minionn"],
+    choices=["resnet18", "resnet32", "resnet50", "resnet110", "vgg16", "vgg16_bn", "minionn", "minionn_bn"],
     help="Model architecture",
 )
 
@@ -131,9 +131,10 @@ def _run_experiment(args):
     cfg_name = ntpath.basename(args.config).split(".")[0]
     model_name = args.model_type
     if args.resume:
-        model_name = ntpath.basename(args.model_location).split(".")[0]
+        model_name = "_".join(args.model_location.split("/")[-3:-1])
     results_path = f"results/{args.dataset}/{model_name}_{device}"
     results = None
+    aggregable_keys = ["comm_time", "run_time", "run_time_amortized", "run_time_95conf_lower", "run_time_95conf_upper"]
     for delay in args.delays:
         cfg.communicator.delay = delay
         _results = run_mpc_model(
@@ -151,10 +152,10 @@ def _run_experiment(args):
         )
         if results is None:
             results = _results
-            for key in ["comm_time", "run_time", "run_time_amortized"]:
+            for key in aggregable_keys:
                 results[key] = [results[key]]
         else:
-            for key in ["comm_time", "run_time", "run_time_amortized"]:
+            for key in aggregable_keys:
                 results[key].append(_results[key])
     results['delays'] = args.delays
     # with open(f"{results_path}/{cfg_name}_result_{rank}.yaml", "w") as f:

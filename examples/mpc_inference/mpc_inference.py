@@ -18,12 +18,14 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 from torchvision import datasets, transforms
+from torchvision.transforms import InterpolationMode
 
 import crypten
 import crypten.communicator as comm
 from crypten.config import cfg
 from datasets.cifar import CIFAR10
 from examples.meters import AverageMeter
+from examples.mpc_inference import presets
 
 from models.resnet import resnet18
 from models.resnet_x import resnet32, resnet110, MiniONN
@@ -62,7 +64,9 @@ def build_model(model_type: str = "resnet18", num_classes=None):
     elif model_type == "resnet110":
         model = resnet110(num_classes=num_classes, init_weights=False)
     elif model_type == "minionn":
-        model = MiniONN(num_classes=num_classes, init_weights=False)
+        model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=False)
+    elif model_type == "minionn_bn":
+        model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=True)
     elif model_type == "vgg16_bn":
         model = vgg16_bn(num_classes=num_classes)
     elif model_type == "vgg16":
@@ -76,7 +80,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
     g = torch.Generator()
     g.manual_seed(0)
     if datatset_name == "cifar10":
-        dataset = CIFAR10(root="data/cifar10")
+        dataset = CIFAR10(root="/scratch/a2diaa/datasets/cifar10")
         val_loader = dataset.get_dataloader('valid',
                                             shuffle=False,
                                             batch_size=batch_size,
@@ -89,7 +93,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                              (0.2023, 0.1994, 0.2010))])
-        dataset = datasets.CIFAR100(root="data/cifar100", transform=transform, train=False, download=True)
+        dataset = datasets.CIFAR100(root="/scratch/a2diaa/datasets/cifar100", transform=transform, train=False, download=True)
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
             shuffle=False,
@@ -99,16 +103,12 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
             generator=g)
         num_classes = 100
     elif datatset_name == "imagenet":
-        # define appropriate transforms:
-        transform = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
+        interpolation = InterpolationMode("bilinear")
+        preprocessing = presets.ClassificationPresetEval(
+            crop_size=224, resize_size=232, interpolation=interpolation
         )
-        dataset = datasets.ImageNet(root="data/imagenet", transform=transform, split="val", download=True)
+
+        dataset = datasets.ImageFolder("/scratch/lprfenau/datasets/imagenet/val", preprocessing)
 
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
@@ -248,7 +248,7 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             if n_batches is not None and i + 1 >= n_batches:
                 break
     comm_stats.pop("time")
-    runtime_confidence = total_time.mean_confidence_interval()
+    _, mmh, mph = total_time.mean_confidence_interval()
     results = {
         "enc_acc": accuracy_enc.value().item(),
         "pla_acc": accuracy_plain.value().item(),
@@ -256,7 +256,8 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
         "error": average_error.value().item(),
         "comm_time": communication_time.value(),
         "run_time": total_time.value(),
-        "run_time_confidence": runtime_confidence,
+        "run_time_95conf_lower": mmh.item(),
+        "run_time_95conf_upper": mph.item(),
         "run_time_amortized": inference_time.value(),
         "comm": comm_stats
     }
