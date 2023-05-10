@@ -52,8 +52,8 @@ def timeit(fn, size):
     return out, time_diff, average_time_diff, comm.get().get_communication_stats()
 
 
-def relu_compare_run(n_points=32768, repeats=8, delay=0.0, device=torch.device("cpu")):
-    cfg.load_config("configs/default10.yaml")
+def relu_compare_run(n_points=32768, repeats=200, delay=0.0, device=torch.device("cpu")):
+    cfg.load_config("configs/default12.yaml")
     cfg.communicator.delay = delay
 
     coeffs = list(cfg.functions.relu_coeffs)
@@ -93,13 +93,13 @@ def relu_compare_run(n_points=32768, repeats=8, delay=0.0, device=torch.device("
         o_n = sum(coeffs[i] * x_plain ** i for i in range(len(coeffs)))
 
         o_c, t_c, avg_c, comm_c = timeit(crypten_poly, x_input.size(0))
-        time_c.add(t_c, x_input.size(0))
+        time_c.add(t_c, 1)
         o_f, t_f, avg_f, comm_f = timeit(florian, x_input.size(0))
-        time_f.add(t_f, x_input.size(0))
+        time_f.add(t_f, 1)
         o_h, t_h, avg_h, comm_h = timeit(honeybadger, x_input.size(0))
-        time_h.add(t_h, x_input.size(0))
+        time_h.add(t_h, 1)
         o_r, t_r, avg_r, comm_r = timeit(relu, x_input.size(0))
-        time_r.add(t_r, x_input.size(0))
+        time_r.add(t_r, 1)
 
         err_f = (o_n - o_f).abs().sum().item() / n_points
         err_h = (o_n - o_h).abs().sum().item() / n_points
@@ -120,7 +120,7 @@ def relu_compare_run(n_points=32768, repeats=8, delay=0.0, device=torch.device("
             "-----------------------------------------------------------------------------"
             .format(*to_print)
         )
-    return time_c.value(), time_f.value(), time_h.value(), time_r.value()
+    return time_c, time_f, time_h, time_r
 
 
 parser = argparse.ArgumentParser(description="CrypTen Poly Eval")
@@ -149,26 +149,16 @@ def _run_experiment(args):
     if "RANK" in os.environ and os.environ["RANK"] != "0":
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
-    relus = ['crypten', 'florian', 'honeybagder', 'relu']
+    configs = ['crypten12', 'florian12', 'honeybagder12', 'default12']
     n_points = 32768
-    delays = [0.0, 0.025, 0.05, 0.075, 0.1]
+    delays = [0.000125, 0.025, 0.05, 0.1]
     devices = [torch.device("cpu"), torch.device("cuda:0")]
     for device in devices:
-        relu_times = {k: [] for k in relus}
-        relu_times['delays'] = delays
-        relu_times['relus'] = relus
+        os.makedirs(f"results/relus/{device}")
         for delay in delays:
             results = relu_compare_run(n_points=n_points, delay=delay, device=device)
-            for ind in range(len(relus)):
-                relu_times[relus[ind]].append(results[ind])
-        for relu in relu_times['relus']:
-            plt.plot(relu_times['delays'], relu_times[relu], label=relu)
-        plt.xlabel("Artificial Delay (one way) in seconds")
-        plt.ylabel("Runtime in seconds")
-        plt.title(f"Relu evaluation for {n_points} points with 4 degree poly on {device}")
-        plt.legend()
-        plt.savefig(f"plots/relu_{device}_{os.environ['RANK']}.png")
-        plt.close()
+
+
 
 
 def main(run_experiment):
