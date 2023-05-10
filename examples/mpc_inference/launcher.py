@@ -57,7 +57,7 @@ parser.add_argument(
     "--model-type",
     default="resnet32",
     type=str,
-    choices=["resnet18", "resnet32", "resnet50", "resnet110", "vgg16", "vgg16_bn", "minionn"],
+    choices=["resnet18", "resnet32", "resnet50", "resnet110", "vgg16", "vgg16_bn", "minionn", "minionn_bn"],
     help="Model architecture",
 )
 
@@ -131,7 +131,7 @@ def _run_experiment(args):
     cfg_name = ntpath.basename(args.config).split(".")[0]
     model_name = args.model_type
     if args.resume:
-        model_name = ntpath.basename(args.model_location).split(".")[0]
+        model_name = "_".join(args.model_location.split("/")[-3:-1])
     results_path = f"results/{args.dataset}/{model_name}_{device}"
     results = None
     aggregable_keys = ["comm_time", "run_time", "run_time_amortized", "run_time_95conf_lower", "run_time_95conf_upper"]
