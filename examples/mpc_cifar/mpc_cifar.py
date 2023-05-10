@@ -44,9 +44,9 @@ def run_mpc_cifar(
         random.seed(seed)
         torch.manual_seed(seed)
 
-    crypten.init()
+    # crypten.init()
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{comm.get().rank}' if torch.cuda.is_available() else 'cpu')
 
     # create model
     model = LeNet()
