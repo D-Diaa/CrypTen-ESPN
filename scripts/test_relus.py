@@ -56,6 +56,8 @@ def timeit(fn, size):
 
 def relu_compare_run(n_points=32768, repeats=20, delay=0.0, device=torch.device("cpu")):
     cfg.load_config("configs/default12.yaml")
+    cfg.mpc.real_shares = False
+    cfg.mpc.real_triplets = True
     cfg.communicator.delay = delay
 
     coeffs = list(cfg.functions.relu_coeffs)
@@ -155,7 +157,7 @@ def _run_experiment(args):
     n_points = 32768
     delays = [0.000125, 0.025, 0.05, 0.1]
     devices = [torch.device("cpu"), torch.device("cuda:0")]
-    aggregable_keys = ["run_time", "run_time_95conf_lower", "run_time_95conf_upper" ]
+    aggregable_keys = ["run_time", "run_time_95conf_lower", "run_time_95conf_upper"]
 
     for device in devices:
         all_results = {conf: {
@@ -170,7 +172,7 @@ def _run_experiment(args):
                     all_results[conf][key].append(res[j].item())
         if "RANK" in os.environ and os.environ["RANK"] == "0":
             for conf in configs:
-                all_results[conf]['delays']=delays
+                all_results[conf]['delays'] = delays
                 with open(f"results/relus/{device}/{conf}_result.yaml", "w") as f:
                     yaml.dump(all_results[conf], f)
 
