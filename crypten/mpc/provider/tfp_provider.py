@@ -20,7 +20,7 @@ class TrustedFirstParty(TupleProvider):
 
     def generate_additive_triple(self, size0, size1, op, device=None, *args, **kwargs):
         """Generate multiplicative triples of given sizes"""
-        if cfg.mpc.real_shares:
+        if not  cfg.mpc.real_shares:
             a = zeros(size0, device=device)
             b = zeros(size1, device=device)
         else:
