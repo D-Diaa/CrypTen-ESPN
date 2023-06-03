@@ -26,10 +26,12 @@ from crypten.config import cfg
 from datasets.cifar import CIFAR10
 from examples.meters import AverageMeter
 from examples.mpc_inference import presets
+from examples.util import inspect, count_nans
 
 from models.resnet import resnet18
 from models.resnet_x import resnet32, resnet110, MiniONN
-from torchvision.models.resnet import resnet50
+#from torchvision.models.resnet import resnet50
+from torchvision.models import resnet50, ResNet50_Weights
 from models.vgg import ModulusNet_vgg16_bn as vgg16_bn
 from models.vgg import ModulusNet_vgg16 as vgg16
 from models.PolynomialEvaluator import PolynomialEvaluator
@@ -60,17 +62,19 @@ def build_model(model_type: str = "resnet18", num_classes=None):
     elif model_type == "resnet32":
         model = resnet32(num_classes=num_classes, init_weights=False)
     elif model_type == "resnet50":
-        model = resnet50(num_classes=num_classes)
+        model = resnet50(num_classes=num_classes, weights=ResNet50_Weights.DEFAULT)
     elif model_type == "resnet110":
         model = resnet110(num_classes=num_classes, init_weights=False)
     elif model_type == "minionn":
         model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=False)
     elif model_type == "minionn_bn":
         model = MiniONN(num_classes=num_classes, init_weights=False, use_batch_norm=True)
-    elif model_type == "vgg16_bn":
-        model = vgg16_bn(num_classes=num_classes)
-    elif model_type == "vgg16":
-        model = vgg16(num_classes=num_classes)
+    elif model_type.startswith("vgg16"):
+        pool = "avg" if "avg" in model_type else "max"
+        if "bn" in model_type:
+            model = vgg16_bn(num_classes=num_classes, pool=pool)
+        else:
+            model = vgg16(num_classes=num_classes, pool=pool)
     else:
         raise NotImplementedError
     return model
@@ -93,7 +97,8 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                              (0.2023, 0.1994, 0.2010))])
-        dataset = datasets.CIFAR100(root="/scratch/a2diaa/datasets/cifar100", transform=transform, train=False, download=True)
+        dataset = datasets.CIFAR100(root="/scratch/a2diaa/datasets/cifar100", transform=transform, train=False,
+                                    download=True)
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
             shuffle=False,
@@ -161,16 +166,16 @@ def run_mpc_model(
             raise IOError("=> no checkpoint found at '{}'".format(model_location))
 
     model = model.to(device)
-
-    if not skip_plaintext:
-        logging.info("===== Evaluating plaintext LeNet network =====")
-        validate(val_loader, model, criterion, print_freq)
     input_size = get_input_size(val_loader)
     private_model = construct_private_model(input_size, model, model_type, num_classes, device=device)
     replace_relus(model)
+
+    if not skip_plaintext:
+        logging.info("===== Evaluating plaintext LeNet network =====")
+        validate(val_loader, model, criterion, print_freq, device=device)
     if evaluate_separately:
         logging.info("===== Evaluating Private LeNet network =====")
-        validate(val_loader, private_model, criterion, print_freq)
+        validate(val_loader, private_model, criterion, print_freq, device=device)
     logging.info("===== Validating side-by-side ======")
     return validate_side_by_side(val_loader, model, private_model, device, n_batches)
 
@@ -201,7 +206,8 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             start_time = time.monotonic()
             output_encr = private_model(input_encr)
             end_time = time.monotonic()
-
+            # inspect(output_encr, "Output of Model -->", output_plaintext)
+            # print(count_nans(output_plaintext))
             comm_stats = comm.get().get_communication_stats()
 
             delta = timedelta(seconds=end_time - start_time)
@@ -308,7 +314,7 @@ def encrypt_data_tensor_with_src(input):
     return private_input
 
 
-def validate(val_loader, model, criterion, print_freq=10):
+def validate(val_loader, model, criterion, print_freq=10, device=torch.device('cpu')):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -320,8 +326,8 @@ def validate(val_loader, model, criterion, print_freq=10):
     with torch.no_grad():
         end = time.time()
         for i, (input, target) in enumerate(val_loader):
-            input = input.to(model.device)
-            target = target.to(model.device)
+            input = input.to(device)
+            target = target.to(device)
             if isinstance(model, crypten.nn.Module) and not crypten.is_encrypted_tensor(
                     input
             ):

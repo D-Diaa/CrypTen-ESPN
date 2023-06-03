@@ -105,6 +105,21 @@ def pca(data, components):
     return torch.tensor(V[:, -components:], dtype=dtype)
 
 
+def inspect(mpcten, desc: str, torchten=None):
+    tensor = mpcten.get_plain_text()
+    mx = tensor.max().max()
+    mn = tensor.min().min()
+    if torchten is not None:
+        mn_torch = torchten.min().min()
+        mx_torch = torchten.max().max()
+        logging.info(f"{desc}: [{mn}<->{mx}, {mn_torch}<->{mx_torch}]")
+    else:
+        logging.info(f"{desc}: [{mn}<->{mx}]")
+    # torch.norm(tensor, p='fro')
+
+def count_nans(torchten):
+    return torch.isnan(torchten.view(-1)).sum().item()
+
 def process_mnist_files(raw_dir, processed_dir):
     """
     Uncompress zipped train and/or test image and label files, load the
