@@ -12,9 +12,10 @@ import logging
 import unittest
 from collections import namedtuple
 
-import crypten
 import torch
 import torch.nn.functional as F
+
+import crypten
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from crypten.gradients import AutogradContext
@@ -23,7 +24,6 @@ from test.multiprocess_test_case import (
     MultiProcessTestCase,
     onehot,
 )
-
 
 # Sizes for tensor operations
 SIZES = [
@@ -76,14 +76,14 @@ class TestGradients:
         self.assertTrue(test_passed, msg=msg)
 
     def _check_forward_backward(
-        self,
-        func_name,
-        input_tensor,
-        *args,
-        torch_func_name=None,
-        msg=None,
-        addl_args=None,
-        **kwargs,
+            self,
+            func_name,
+            input_tensor,
+            *args,
+            torch_func_name=None,
+            msg=None,
+            addl_args=None,
+            **kwargs,
     ):
         """Checks forward and backward against PyTorch
 
@@ -454,13 +454,13 @@ class TestGradients:
         groupings = [1, 2]
 
         for (
-            batches,
-            kernel_size,
-            out_channels,
-            padding,
-            stride,
-            dilation,
-            groups,
+                batches,
+                kernel_size,
+                out_channels,
+                padding,
+                stride,
+                dilation,
+                groups,
         ) in itertools.product(
             nbatches,
             kernel_sizes,
@@ -513,13 +513,13 @@ class TestGradients:
         groupings = [1, 2]
 
         for (
-            batches,
-            kernel_size,
-            out_channels,
-            padding,
-            stride,
-            dilation,
-            groups,
+                batches,
+                kernel_size,
+                out_channels,
+                padding,
+                stride,
+                dilation,
+                groups,
         ) in itertools.product(
             nbatches, kernel_sizes, ochannels, paddings, strides, dilations, groupings
         ):
@@ -565,13 +565,13 @@ class TestGradients:
         ceil_modes = [False, True] if func == "max_pool2d" else [False]
 
         for image_size, channels, batches, kernel_size in itertools.product(
-            image_sizes, nchannels, nbatches, kernel_sizes
+                image_sizes, nchannels, nbatches, kernel_sizes
         ):
             size = (batches, channels, *image_size)
             image = get_random_test_tensor(size=size, is_float=True)
 
             for padding, stride, ceil_mode in itertools.product(
-                paddings, strides, ceil_modes
+                    paddings, strides, ceil_modes
             ):
                 # Skip invalid padding sizes
                 if kernel_size == 1 and padding == 1:
@@ -587,7 +587,7 @@ class TestGradients:
                     )
 
     def _check_max_pool2d_forward_backward(
-        self, image, kernel_size, padding, stride, dilation, ceil_mode, tol=0.1
+            self, image, kernel_size, padding, stride, dilation, ceil_mode, tol=0.1
     ):
         """Checks forward and backward are for max pool 2d.
         Verifies gradients by checking sum of non-matching elements to account for
@@ -643,9 +643,9 @@ class TestGradients:
         crypten_grad = image_enc.grad.get_plain_text()
         non_matching_indices = (image.grad - crypten_grad).abs() > tol
         sum_is_close = (
-            crypten_grad[non_matching_indices].sum()
-            - image.grad[non_matching_indices].sum()
-        ) < tol
+                               crypten_grad[non_matching_indices].sum()
+                               - image.grad[non_matching_indices].sum()
+                       ) < tol
         if not sum_is_close:
             msg = "max_pool2d backward failed"
             logging.info(msg)

@@ -18,6 +18,8 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 from torchvision import datasets, transforms
+# from torchvision.models.resnet import resnet50
+from torchvision.models import resnet50, ResNet50_Weights
 from torchvision.transforms import InterpolationMode
 
 import crypten
@@ -26,15 +28,11 @@ from crypten.config import cfg
 from datasets.cifar import CIFAR10
 from examples.meters import AverageMeter
 from examples.mpc_inference import presets
-from examples.util import inspect, count_nans
-
+from models.PolynomialEvaluator import PolynomialEvaluator
 from models.resnet import resnet18
 from models.resnet_x import resnet32, resnet110, MiniONN
-#from torchvision.models.resnet import resnet50
-from torchvision.models import resnet50, ResNet50_Weights
-from models.vgg import ModulusNet_vgg16_bn as vgg16_bn
 from models.vgg import ModulusNet_vgg16 as vgg16
-from models.PolynomialEvaluator import PolynomialEvaluator
+from models.vgg import ModulusNet_vgg16_bn as vgg16_bn
 
 
 def seed_worker(worker_id):

@@ -199,7 +199,7 @@ class CUDALongTensor(object):
         c_out, c_in, *ks = y.size()
         kernel_elements = functools.reduce(operator.mul, ks)
 
-        nb = 4 if kernel_elements < 2**20 else 5
+        nb = 4 if kernel_elements < 2 ** 20 else 5
         # nb = CUDALongTensor.__DEFAULT_NBLOCKS
         nb2 = nb ** 2
 
@@ -245,7 +245,7 @@ class CUDALongTensor(object):
         # Use 4 blocks if each dot product is 256 elements or larger to prevent overflow in the sum
         # nb = 3 if x.size(-1) < 256 else (4 if x.size(-1) < 2 ** 20 else 5)
 
-        nb = 4 if x.size(-1) < 2**20 else 5
+        nb = 4 if x.size(-1) < 2 ** 20 else 5
         # nb = CUDALongTensor.__DEFAULT_NBLOCKS
 
         # Prepend 1 to the dimension of x or y if it is 1-dimensional

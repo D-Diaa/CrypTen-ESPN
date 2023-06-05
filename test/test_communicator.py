@@ -7,17 +7,17 @@
 
 import unittest
 
-import crypten
-import crypten.communicator as comm
 import numpy
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
+
+import crypten
+import crypten.communicator as comm
 from crypten.common import serial
 from crypten.config import cfg
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
-
 
 # TODO: Commenting this out until we figure out why `thread.join() hangs
 #       Perhaps the thread to be joined has somehow exited

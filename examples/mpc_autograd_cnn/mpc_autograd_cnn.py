@@ -7,22 +7,23 @@
 
 import tempfile
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from examples.util import NoopContextManager
 from torchvision import datasets, transforms
+
+import crypten
+import crypten.communicator as comm
+from examples.util import NoopContextManager
 
 
 def run_mpc_autograd_cnn(
-    context_manager=None,
-    num_epochs=3,
-    learning_rate=0.001,
-    batch_size=5,
-    print_freq=5,
-    num_samples=100,
+        context_manager=None,
+        num_epochs=3,
+        learning_rate=0.001,
+        batch_size=5,
+        print_freq=5,
+        num_samples=100,
 ):
     """
     Args:
@@ -71,13 +72,13 @@ def run_mpc_autograd_cnn(
 
 
 def train_encrypted(
-    x_encrypted,
-    y_encrypted,
-    encrypted_model,
-    num_epochs,
-    learning_rate,
-    batch_size,
-    print_freq,
+        x_encrypted,
+        y_encrypted,
+        encrypted_model,
+        num_epochs,
+        learning_rate,
+        batch_size,
+        print_freq,
 ):
     rank = comm.get().get_rank()
     loss = crypten.nn.MSELoss()

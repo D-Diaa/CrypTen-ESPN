@@ -5,12 +5,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten.nn as nn
 from tensorboard.compat.proto.attr_value_pb2 import AttrValue
 from tensorboard.compat.proto.graph_pb2 import GraphDef
 from tensorboard.compat.proto.node_def_pb2 import NodeDef
 from tensorboard.compat.proto.versions_pb2 import VersionDef
 from torch.utils.tensorboard import SummaryWriter as _SummaryWriter
+
+import crypten.nn as nn
 
 
 def graph(model):
@@ -42,7 +43,6 @@ def graph(model):
 
     # loop all graph connections:
     for output_name, input_names in model._graph.items():
-
         # get parameters and type of module:
         module = modules[output_name]
         op = str(type(module))

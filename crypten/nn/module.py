@@ -9,9 +9,10 @@ import logging
 import warnings
 from collections import OrderedDict
 
-import crypten
 import torch
 import torch.onnx.symbolic_helper as sym_help
+
+import crypten
 from crypten.common.functions.pooling import _adaptive_pool2d_helper
 
 

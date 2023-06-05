@@ -13,36 +13,37 @@ import tempfile
 import time
 import warnings
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
+from torchvision import datasets, transforms
+
+import crypten
+import crypten.communicator as comm
 from examples.meters import AverageMeter
 from examples.util import NoopContextManager, process_mnist_files
-from torchvision import datasets, transforms
 
 
 def run_tfe_benchmarks(
-    network="B",
-    epochs=5,
-    start_epoch=0,
-    batch_size=256,
-    lr=0.01,
-    momentum=0.9,
-    weight_decay=1e-6,
-    print_freq=10,
-    resume="",
-    evaluate=True,
-    seed=None,
-    skip_plaintext=False,
-    save_checkpoint_dir="/tmp/tfe_benchmarks",
-    save_modelbest_dir="/tmp/tfe_benchmarks_best",
-    context_manager=None,
-    mnist_dir=None,
+        network="B",
+        epochs=5,
+        start_epoch=0,
+        batch_size=256,
+        lr=0.01,
+        momentum=0.9,
+        weight_decay=1e-6,
+        print_freq=10,
+        resume="",
+        evaluate=True,
+        seed=None,
+        skip_plaintext=False,
+        save_checkpoint_dir="/tmp/tfe_benchmarks",
+        save_modelbest_dir="/tmp/tfe_benchmarks_best",
+        context_manager=None,
+        mnist_dir=None,
 ):
     crypten.init()
 
@@ -185,7 +186,7 @@ def run_tfe_benchmarks(
 
 
 def train(
-    train_loader, model, criterion, optimizer, epoch, print_freq=10, flatten=False
+        train_loader, model, criterion, optimizer, epoch, print_freq=10, flatten=False
 ):
     batch_time = AverageMeter()
     losses = AverageMeter()
@@ -278,7 +279,7 @@ def validate(val_loader, model, criterion, print_freq=10, flatten=False):
             if flatten:
                 input = input.view(input.size(0), -1)
             if isinstance(model, crypten.nn.Module) and not crypten.is_encrypted_tensor(
-                input
+                    input
             ):
                 input = crypten.cryptensor(input)
 
@@ -329,7 +330,7 @@ def validate(val_loader, model, criterion, print_freq=10, flatten=False):
 
 
 def save_checkpoint(
-    state, is_best, filename="checkpoint.pth.tar", model_best="model_best.pth.tar"
+        state, is_best, filename="checkpoint.pth.tar", model_best="model_best.pth.tar"
 ):
     # TODO: use crypten.save_from_party() in future.
     rank = comm.get().get_rank()

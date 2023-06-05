@@ -5,9 +5,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten
 import torch
 
+import crypten
 from .gradients import AutogradContext as _AutogradContext
 
 

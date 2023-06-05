@@ -23,59 +23,65 @@
 }
 
 @media only screen and (min-width: 736px) {
-  .twoByGridBlock {
-    margin: 0px;
-  }
+    .twoByGridBlock {
+        margin: 0px;
+    }
 }
+
 .sitemap {
-  padding-bottom: 0px;
+    padding-bottom: 0px;
 }
 
 
-.blockElement{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: justify;
+.blockElement {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: justify;
 }
 
 h2 {
-  margin-top: 0em;
+    margin-top: 0em;
 }
 
 .imageAlignBottom .blockImage {
-  margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 
 .ribbon {
-  position: fixed; top: 50px; right: 0px; border: 0; z-index: 10;
+    position: fixed;
+    top: 50px;
+    right: 0px;
+    border: 0;
+    z-index: 10;
 }
 
-.darkBackground code  {
-  background-color: #f7f7f7;
-  color: black;
+.darkBackground code {
+    background-color: #f7f7f7;
+    color: black;
 }
 
 .darkBackground a {
     color: lightsteelblue;
 }
+
 .fixedHeaderContainer header .headerTitleWithLogo {
-  font-size: 0pt;
+    font-size: 0pt;
 }
 
 #tutorials {
-  background-color: #808080;
-  color: #fff;
+    background-color: #808080;
+    color: #fff;
 }
 
 #tutorials a {
-  color: lightsteelblue;
+    color: lightsteelblue;
 }
 
 #tutorials p {
-  margin-top: 0;
+    margin-top: 0;
 }
 
 #try {
-  padding-bottom: 30px;
+    padding-bottom: 30px;
 }

@@ -11,10 +11,11 @@ import itertools
 import logging
 import unittest
 
-import crypten
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import crypten
 from crypten.config import cfg
 from crypten.cuda import CUDALongTensor
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
@@ -107,10 +108,10 @@ class TestCUDA(TestMPC):
         ]
 
         for x_size, y_size in zip(input_sizes, other_sizes):
-            x = get_random_test_tensor(size=x_size, max_value=2**62, is_float=False)
+            x = get_random_test_tensor(size=x_size, max_value=2 ** 62, is_float=False)
             x_cuda = CUDALongTensor(x)
 
-            y = get_random_test_tensor(size=y_size, max_value=2**62, is_float=False)
+            y = get_random_test_tensor(size=y_size, max_value=2 ** 62, is_float=False)
             y_cuda = CUDALongTensor(y)
 
             z = torch.matmul(x_cuda, y_cuda)
@@ -153,11 +154,11 @@ class TestCUDA(TestMPC):
 
         for func_name in ["conv1d", "conv_transpose1d"]:
             for (
-                batches,
-                kernel_size,
-                out_channels,
-                padding,
-                stride,
+                    batches,
+                    kernel_size,
+                    out_channels,
+                    padding,
+                    stride,
             ) in itertools.product(
                 nbatches, kernel_sizes, ochannels, paddings, strides
             ):
@@ -231,11 +232,11 @@ class TestCUDA(TestMPC):
 
         for func_name in ["conv2d", "conv_transpose2d"]:
             for (
-                batches,
-                kernel_size,
-                out_channels,
-                padding,
-                stride,
+                    batches,
+                    kernel_size,
+                    out_channels,
+                    padding,
+                    stride,
             ) in itertools.product(*[v for _, v in kwargs.items()]):
 
                 # sample input:

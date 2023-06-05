@@ -12,10 +12,11 @@ import math
 import os
 import unittest
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn.functional as F
+
+import crypten
+import crypten.communicator as comm
 from crypten.common.functions.pooling import _pool2d_reshape
 from crypten.common.rng import generate_kbit_random_tensor, generate_random_ring_element
 from crypten.common.tensor_types import is_float_tensor
@@ -112,7 +113,6 @@ class TestMPC(object):
 
         # test both types:
         for ptype in [Ptype.arithmetic, Ptype.binary]:
-
             # generate shares, sync them between parties, and create tensor:
             shares, reference = _generate_tensor(ptype)
             share = comm.get().scatter(shares, 0)
@@ -470,13 +470,13 @@ class TestMPC(object):
         for func_name in ["conv1d", "conv_transpose1d"]:
             for kernel_type in [lambda x: x, MPCTensor]:
                 for (
-                    batches,
-                    kernel_size,
-                    out_channels,
-                    padding,
-                    stride,
-                    dilation,
-                    groups,
+                        batches,
+                        kernel_size,
+                        out_channels,
+                        padding,
+                        stride,
+                        dilation,
+                        groups,
                 ) in itertools.product(
                     nbatches,
                     kernel_sizes,
@@ -562,13 +562,13 @@ class TestMPC(object):
 
         for kernel_type in [lambda x: x, MPCTensor]:
             for (
-                batches,
-                kernel_size,
-                out_channels,
-                padding,
-                stride,
-                dilation,
-                groups,
+                    batches,
+                    kernel_size,
+                    out_channels,
+                    padding,
+                    stride,
+                    dilation,
+                    groups,
             ) in itertools.product(
                 nbatches,
                 kernel_sizes,
@@ -619,11 +619,11 @@ class TestMPC(object):
         """Test max_pool of encrypted tensor."""
 
         def _assert_index_match(
-            indices,
-            encrypted_indices,
-            matrix_size,
-            kernel_size,
-            **kwargs,
+                indices,
+                encrypted_indices,
+                matrix_size,
+                kernel_size,
+                **kwargs,
         ):
             # Assert each kernel is one-hot
             self.assertTrue(
@@ -660,11 +660,11 @@ class TestMPC(object):
                 paddings = range(kernel_size // 2 + 1)
 
                 for (
-                    stride,
-                    padding,
-                    dilation,
-                    ceil_mode,
-                    return_indices,
+                        stride,
+                        padding,
+                        dilation,
+                        ceil_mode,
+                        return_indices,
                 ) in itertools.product(
                     strides,
                     paddings,
@@ -870,10 +870,10 @@ class TestMPC(object):
             (5, 5, 5, 5),
         ]
         test_cases = [
-            torch.tensor(
-                [[1, 1, 2, 1, 4, 1, 3, 4]], dtype=torch.float, device=self.device
-            )
-        ] + [self._get_random_test_tensor(size=size, is_float=False) for size in sizes]
+                         torch.tensor(
+                             [[1, 1, 2, 1, 4, 1, 3, 4]], dtype=torch.float, device=self.device
+                         )
+                     ] + [self._get_random_test_tensor(size=size, is_float=False) for size in sizes]
 
         for tensor in test_cases:
             tensor = tensor.float()
@@ -929,8 +929,8 @@ class TestMPC(object):
                         self.assertTrue((out_decr.sum(dim) == 1).all())
                         self.assertTrue(
                             (
-                                out_decr.mul(tensor).sum(dim, keepdim=keepdim)
-                                == val_ref
+                                    out_decr.mul(tensor).sum(dim, keepdim=keepdim)
+                                    == val_ref
                             ).all()
                         )
 
@@ -965,10 +965,10 @@ class TestMPC(object):
             (5, 5, 5, 5),
         ]
         test_cases = [
-            torch.tensor(
-                [[1, 1, 2, 1, 4, 1, 3, 4]], dtype=torch.float, device=self.device
-            )
-        ] + [self._get_random_test_tensor(size=size, is_float=False) for size in sizes]
+                         torch.tensor(
+                             [[1, 1, 2, 1, 4, 1, 3, 4]], dtype=torch.float, device=self.device
+                         )
+                     ] + [self._get_random_test_tensor(size=size, is_float=False) for size in sizes]
 
         for tensor in test_cases:
             tensor = tensor.float()
@@ -1828,7 +1828,7 @@ class TestMPC(object):
             encrypted_tensor2 = y_type(tensor2)
 
             condition_tensor = (
-                self._get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
+                    self._get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
             )
             condition_encrypted = MPCTensor(condition_tensor)
             condition_bool = condition_tensor.bool()

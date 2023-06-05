@@ -1,6 +1,5 @@
 # CrypTen PyCon Workshop 2020
 
-
 ## Installation
 
 Install CrypTen using the instructions in the [README](https://github.com/facebookresearch/CrypTen#installing-crypten).

@@ -24,9 +24,10 @@ import logging
 import os
 import pickle
 
-import examples.util
 import torch
 import visdom
+
+import examples.util
 from examples.multiprocess_launcher import MultiProcessLauncher
 
 

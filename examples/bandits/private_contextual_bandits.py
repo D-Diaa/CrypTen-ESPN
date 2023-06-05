@@ -8,8 +8,9 @@
 import random
 import time
 
-import crypten
 import torch
+
+import crypten
 from crypten.config import cfg
 
 
@@ -18,13 +19,13 @@ def set_precision(bits):
 
 
 def online_learner(
-    sampler,
-    backend="mpc",
-    nr_iters=7,
-    score_func=None,
-    monitor_func=None,
-    checkpoint_func=None,
-    checkpoint_every=0,
+        sampler,
+        backend="mpc",
+        nr_iters=7,
+        score_func=None,
+        monitor_func=None,
+        checkpoint_func=None,
+        checkpoint_every=0,
 ):
     """
     Online learner that minimizes linear least squared loss.
@@ -53,7 +54,7 @@ def online_learner(
 
         # unpack sample:
         assert "context" in sample and "rewards" in sample, (
-            "invalid sample: %s" % sample
+                "invalid sample: %s" % sample
         )
 
         context = crypten.cryptensor(sample["context"])
@@ -62,7 +63,6 @@ def online_learner(
 
         # initialization of model parameters:
         if idx == 0:
-
             # initialize accumulators for linear least squares:
             A_inv = [torch.eye(num_features).unsqueeze(0) for _ in range(num_arms)]
             A_inv = crypten.cat([crypten.cryptensor(A) for A in A_inv])
@@ -129,14 +129,14 @@ def online_learner(
 
 
 def epsilon_greedy(
-    sampler,
-    epsilon=0.0,
-    backend="mpc",
-    nr_iters=7,
-    precision=20,
-    monitor_func=None,
-    checkpoint_func=None,
-    checkpoint_every=0,
+        sampler,
+        epsilon=0.0,
+        backend="mpc",
+        nr_iters=7,
+        precision=20,
+        monitor_func=None,
+        checkpoint_func=None,
+        checkpoint_every=0,
 ):
     """
     Run epsilon-greedy linear least squares learner on dataset.

@@ -5,9 +5,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import torch
+
 import crypten
 import crypten.communicator as comm
-import torch
 from crypten.common.util import count_wraps
 from crypten.config import cfg
 

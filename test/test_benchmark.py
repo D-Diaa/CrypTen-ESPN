@@ -9,7 +9,6 @@ import unittest
 
 import crypten
 
-
 try:
     from ..benchmarks import benchmark
 except ValueError:

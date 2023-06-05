@@ -21,7 +21,6 @@ class TestTensorboard(MultiProcessTestCase):
             crypten.init()
 
     def test_tensorboard(self):
-
         # create small crypten model:
         model = crypten.nn.Graph("input", "output")
         model.add_module("intermediate1", crypten.nn.ReLU(), ["input"])

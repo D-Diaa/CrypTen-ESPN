@@ -8,8 +8,9 @@
 import itertools
 import logging
 
-import crypten
 import torch
+
+import crypten
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
@@ -62,7 +63,7 @@ class TestOptim(object):
         crypten_model.encrypt()
 
         for lr, momentum, dampening, weight_decay, nesterov in itertools.product(
-            lr_vals, momentum_vals, dampening_vals, weight_decay_vals, nesterov_vals
+                lr_vals, momentum_vals, dampening_vals, weight_decay_vals, nesterov_vals
         ):
             kwargs = {
                 "lr": lr,

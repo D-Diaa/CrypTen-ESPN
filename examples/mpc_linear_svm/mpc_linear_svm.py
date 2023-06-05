@@ -8,8 +8,9 @@
 import logging
 import time
 
-import crypten
 import torch
+
+import crypten
 from examples.meters import AverageMeter
 
 
@@ -66,7 +67,7 @@ def evaluate_linear_svm(features, labels, w, b):
 
 
 def run_mpc_linear_svm(
-    epochs=50, examples=50, features=100, lr=0.5, skip_plaintext=False
+        epochs=50, examples=50, features=100, lr=0.5, skip_plaintext=False
 ):
     crypten.init()
 

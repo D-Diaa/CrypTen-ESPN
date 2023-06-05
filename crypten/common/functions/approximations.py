@@ -7,10 +7,10 @@
 
 import math
 
-import crypten
 import torch
-from crypten.config import cfg
 
+import crypten
+from crypten.config import cfg
 
 __all__ = [
     "exp",
@@ -46,7 +46,7 @@ def exp(self):
     """  # noqa: W605
     iters = cfg.functions.exp_iterations
 
-    result = 1 + self.div(2**iters)
+    result = 1 + self.div(2 ** iters)
     for _ in range(iters):
         result = result.square()
     return result
@@ -228,7 +228,7 @@ def _eix(self):
     iterations = cfg.functions.trig_iterations
 
     re = 1
-    im = self.div(2**iterations)
+    im = self.div(2 ** iterations)
 
     # First iteration uses knowledge that `re` is public and = 1
     re -= im.square()
@@ -306,12 +306,12 @@ def sigmoid(self):
 
         # TODO: Set these with configurable parameters
         with cfg.temp_override(
-            {
-                "functions.exp_iterations": 9,
-                "functions.reciprocal_nr_iters": 3,
-                "functions.reciprocal_all_pos": True,
-                "functions.reciprocal_initial": 0.75,
-            }
+                {
+                    "functions.exp_iterations": 9,
+                    "functions.reciprocal_nr_iters": 3,
+                    "functions.reciprocal_all_pos": True,
+                    "functions.reciprocal_initial": 0.75,
+                }
         ):
             pos_output = denominator.reciprocal()
 

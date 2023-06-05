@@ -5,18 +5,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten.communicator as comm
 import torch
-from crypten.encoder import FixedPointEncoder
 
-from ..ptype import ptype as Ptype
+import crypten.communicator as comm
+from crypten.encoder import FixedPointEncoder
 from . import beaver
 from .arithmetic import ArithmeticSharedTensor
 from .binary import BinarySharedTensor
+from ..ptype import ptype as Ptype
 
 
 def _A2B(arithmetic_tensor):
-
     # first try memory-inefficient implementation that takes O(log P) rounds:
     try:
         binary_tensor = BinarySharedTensor.stack(

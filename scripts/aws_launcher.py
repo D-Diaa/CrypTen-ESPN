@@ -196,7 +196,7 @@ def main():
         instances = get_instances(ec2, instance_ids)
 
         assert (
-            len(ssh_key_files) == 1
+                len(ssh_key_files) == 1
         ), "1 region is detected, but {} SSH keys found.".format(len(ssh_key_files))
 
         ssh_key_files = [ssh_key_files[0] for _ in range(len(instances))]
@@ -300,8 +300,8 @@ def parse_args():
     """
     parser = ArgumentParser(
         description="PyTorch distributed training launch "
-        "helper utilty that will spawn up "
-        "parties for MPC scripts on AWS"
+                    "helper utilty that will spawn up "
+                    "parties for MPC scripts on AWS"
     )
 
     parser.add_argument(
@@ -316,7 +316,7 @@ def parse_args():
         action="store_true",
         default=False,
         help="Only show public IPs of the given instances."
-        "No other actions will be done",
+             "No other actions will be done",
     )
 
     parser.add_argument("--regions", type=str, default="us-west-2", help="AWS Region")
@@ -354,7 +354,7 @@ def parse_args():
         type=str,
         default=None,
         help="If not none, use the http proxy specified "
-        "(e.g., fwdproxy:8080) to ssh to AWS instance",
+             "(e.g., fwdproxy:8080) to ssh to AWS instance",
     )
 
     parser.add_argument(
@@ -362,10 +362,10 @@ def parse_args():
         type=str,
         default=None,
         help="The comma-separated paths of additional files "
-        " that need to be transferred to AWS instances. "
-        "If more than one file needs to be transferred, "
-        "the basename of any two files can not be the "
-        "same.",
+             " that need to be transferred to AWS instances. "
+             "If more than one file needs to be transferred, "
+             "the basename of any two files can not be the "
+             "same.",
     )
 
     parser.add_argument(
@@ -373,8 +373,8 @@ def parse_args():
         type=str,
         default="",
         help="The command to run before running distribute "
-        "training for prepare purpose, e.g., setup "
-        "environment, extract data files, etc.",
+             "training for prepare purpose, e.g., setup "
+             "environment, extract data files, etc.",
     )
 
     # positional
@@ -382,9 +382,9 @@ def parse_args():
         "training_script",
         type=str,
         help="The full path to the single machine training "
-        "program/script to be launched in parallel, "
-        "followed by all the arguments for the "
-        "training script",
+             "program/script to be launched in parallel, "
+             "followed by all the arguments for the "
+             "training script",
     )
 
     # rest from the training program

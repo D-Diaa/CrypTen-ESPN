@@ -8,8 +8,9 @@
 import sys
 import unittest
 
-import crypten
 import torch
+
+import crypten
 from crypten.common.util import chebyshev_series
 from crypten.config import cfg
 from crypten.encoder import FixedPointEncoder, nearest_integer_division

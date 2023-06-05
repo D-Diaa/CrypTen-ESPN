@@ -117,8 +117,10 @@ def inspect(mpcten, desc: str, torchten=None):
         logging.info(f"{desc}: [{mn}<->{mx}]")
     # torch.norm(tensor, p='fro')
 
+
 def count_nans(torchten):
     return torch.isnan(torchten.view(-1)).sum().item()
+
 
 def process_mnist_files(raw_dir, processed_dir):
     """

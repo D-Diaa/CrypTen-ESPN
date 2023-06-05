@@ -52,14 +52,14 @@ class SGD(Optimizer):
     """
 
     def __init__(
-        self,
-        params,
-        lr,
-        momentum=0,
-        dampening=0,
-        weight_decay=0,
-        nesterov=False,
-        grad_threshold=None,
+            self,
+            params,
+            lr,
+            momentum=0,
+            dampening=0,
+            weight_decay=0,
+            nesterov=False,
+            grad_threshold=None,
     ):
         if not isinstance(lr, (int, float)) or lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))

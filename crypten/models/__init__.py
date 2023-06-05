@@ -9,9 +9,9 @@ import importlib.util
 import logging
 import sys
 
-import crypten.nn as cnn
 import torch
 
+import crypten.nn as cnn
 
 # List of modules to import and additional classes to update from them
 __import_list = {
@@ -34,7 +34,6 @@ __import_list = {
     "squeezenet": ["Fire"],
     "vgg": [],
 }
-
 
 __all__ = []
 
@@ -141,7 +140,6 @@ except ModuleNotFoundError:
     models = None
     logging.warning("Unable to load torchvision models.")
 
-
 if models is not None:
     for import_name in __import_list.keys():
         try:
@@ -176,7 +174,6 @@ if models is not None:
         except (RuntimeError, AttributeError) as e:
             # Log that module produced an error
             logging.warning(e)
-
 
 raise DeprecationWarning(
     "crypten.models is being deprecated. To import models from torchvision, ",

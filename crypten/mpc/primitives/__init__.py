@@ -8,5 +8,4 @@
 from .arithmetic import ArithmeticSharedTensor
 from .binary import BinarySharedTensor
 
-
 __all__ = ["ArithmeticSharedTensor", "BinarySharedTensor"]

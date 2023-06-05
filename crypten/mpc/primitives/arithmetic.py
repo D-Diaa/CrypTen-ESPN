@@ -19,7 +19,6 @@ from crypten.cuda import CUDALongTensor
 from crypten.encoder import FixedPointEncoder
 from . import beaver, replicated  # noqa: F401
 
-
 SENTINEL = -1
 
 

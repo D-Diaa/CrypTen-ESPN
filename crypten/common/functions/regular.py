@@ -10,7 +10,6 @@ import torch
 from ..tensor_types import is_tensor
 from ..util import torch_cat, torch_stack
 
-
 __all__ = [  # noqa: F822
     "__getitem__",
     "__len__",
@@ -53,7 +52,6 @@ __all__ = [  # noqa: F822
     "var",
     "view",
 ]
-
 
 PROPERTY_FUNCTIONS = ["__len__", "nelement", "dim", "size", "numel"]
 

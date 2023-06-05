@@ -40,7 +40,7 @@ def __SPK_circuit_constants(device):
     )
 
     __MULTIPLIERS = torch.tensor(
-        [(1 << (2**iter + 1)) - 2 for iter in range(__LOG_BITS)], device=device
+        [(1 << (2 ** iter + 1)) - 2 for iter in range(__LOG_BITS)], device=device
     )
     __OUT_MASKS = __MASKS * __MULTIPLIERS
 
@@ -70,17 +70,17 @@ def __SPK_circuit(S, P):
     # fmt: off
     # Tree reduction circuit
     for i in range(__LOG_BITS):
-        in_mask = __MASKS[i]                # Start of arrows
-        out_mask = __OUT_MASKS[i]           # End of arrows
-        not_out_mask = out_mask ^ -1        # Not (end of arrows)
+        in_mask = __MASKS[i]  # Start of arrows
+        out_mask = __OUT_MASKS[i]  # End of arrows
+        not_out_mask = out_mask ^ -1  # Not (end of arrows)
 
         # Set up S0, S1, P0, and P1
-        P0 = SP[1] & out_mask               # Mask P0 from P
-        S1P1 = SP & in_mask                 # Mask S1P1 from SP
-        S1P1._tensor *= __MULTIPLIERS[i]    # Fan out S1P1 along arrows
+        P0 = SP[1] & out_mask  # Mask P0 from P
+        S1P1 = SP & in_mask  # Mask S1P1 from SP
+        S1P1._tensor *= __MULTIPLIERS[i]  # Fan out S1P1 along arrows
 
         # Update S and P
-        update = P0 & S1P1                  # S0 ^= P0 & S1, P0 = P0 & P1
+        update = P0 & S1P1  # S0 ^= P0 & S1, P0 = P0 & P1
         SP[1] &= not_out_mask
         SP ^= update
     # fmt: on
@@ -106,7 +106,7 @@ def __P_circuit(P):
 
 
 def __flip_sign_bit(x):
-    return x ^ -(2**63)
+    return x ^ -(2 ** 63)
 
 
 def __get_sign_bit(x):

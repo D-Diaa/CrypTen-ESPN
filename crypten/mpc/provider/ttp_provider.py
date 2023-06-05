@@ -7,16 +7,15 @@
 
 import logging
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.distributed as dist
+
+import crypten
+import crypten.communicator as comm
 from crypten.common.rng import generate_kbit_random_tensor, generate_random_ring_element
 from crypten.common.util import count_wraps
 from crypten.mpc.primitives import ArithmeticSharedTensor, BinarySharedTensor
-
 from .provider import TupleProvider
-
 
 TTP_FUNCTIONS = ["additive", "square", "binary", "wraps", "B2A"]
 
@@ -167,7 +166,7 @@ class TTPClient:
 
         def ttp_request(self, func_name, device, *args, **kwargs):
             assert (
-                comm.get().get_rank() == 0
+                    comm.get().get_rank() == 0
             ), "Only party 0 communicates with the TTPServer"
             if device is not None:
                 device = str(device)
@@ -251,7 +250,7 @@ class TTPServer:
         """Create random generator to send to a party"""
         ws = comm.get().get_world_size()
 
-        seeds = [torch.randint(-(2**63), 2**63 - 1, size=()) for _ in range(ws)]
+        seeds = [torch.randint(-(2 ** 63), 2 ** 63 - 1, size=()) for _ in range(ws)]
         reqs = [
             dist.isend(tensor=seeds[i], dst=i, group=self.ttp_group) for i in range(ws)
         ]

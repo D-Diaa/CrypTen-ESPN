@@ -35,7 +35,6 @@ except ImportError:
 
     SYM_REGISTRY = False
 
-
 _OPSET_VERSION = 17
 
 

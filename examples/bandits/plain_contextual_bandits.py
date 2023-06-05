@@ -12,13 +12,13 @@ import torch
 
 
 def online_learner(
-    sampler,
-    dtype=torch.double,
-    device="cpu",
-    score_func=None,
-    monitor_func=None,
-    checkpoint_func=None,
-    checkpoint_every=0,
+        sampler,
+        dtype=torch.double,
+        device="cpu",
+        score_func=None,
+        monitor_func=None,
+        checkpoint_func=None,
+        checkpoint_every=0,
 ):
     """
     Online learner that minimizes linear least squared loss.
@@ -41,7 +41,7 @@ def online_learner(
         start_t = time.time()
         # unpack sample:
         assert "context" in sample and "rewards" in sample, (
-            "invalid sample: %s" % sample
+                "invalid sample: %s" % sample
         )
         context = sample["context"].to(dtype=dtype, device=device)
         rewards = sample["rewards"].to(dtype=dtype, device=device)
@@ -106,13 +106,13 @@ def online_learner(
 
 
 def epsilon_greedy(
-    sampler,
-    epsilon=0.0,
-    dtype=torch.double,
-    device="cpu",
-    monitor_func=None,
-    checkpoint_func=None,
-    checkpoint_every=0,
+        sampler,
+        epsilon=0.0,
+        dtype=torch.double,
+        device="cpu",
+        monitor_func=None,
+        checkpoint_func=None,
+        checkpoint_every=0,
 ):
     """
     Run epsilon-greedy linear least squares learner on dataset.
@@ -146,13 +146,13 @@ def epsilon_greedy(
 
 
 def linucb(
-    sampler,
-    epsilon=0.1,
-    dtype=torch.double,
-    device="cpu",
-    monitor_func=None,
-    checkpoint_func=None,
-    checkpoint_every=0,
+        sampler,
+        epsilon=0.1,
+        dtype=torch.double,
+        device="cpu",
+        monitor_func=None,
+        checkpoint_func=None,
+        checkpoint_every=0,
 ):
     """
     Run LinUCB contextual bandit learner on dataset.

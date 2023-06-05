@@ -5,11 +5,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import abc
 import functools
 
 import numpy as np
 import torch
+
 from crypten.cuda import CUDALongTensor
 
 
@@ -76,7 +76,7 @@ def torch_stack(tensors, dim=0, out=None):
 # TODO: Remove this function and change the calling locations accordingly.
 # See https://github.com/pytorch/pytorch/commit/445ee5620ec203cfccefd6f3dca4f0962a83b03e
 def _grad_input_padding(
-    grad_output, input_size, stride, padding, kernel_size, dilation=None
+        grad_output, input_size, stride, padding, kernel_size, dilation=None
 ):
     if dilation is None:
         # For backward compatibility
@@ -94,10 +94,10 @@ def _grad_input_padding(
 
     def dim_size(d):
         return (
-            (grad_output.size(d + 2) - 1) * stride[d]
-            - 2 * padding[d]
-            + 1
-            + dilation[d] * (kernel_size[d] - 1)
+                (grad_output.size(d + 2) - 1) * stride[d]
+                - 2 * padding[d]
+                + 1
+                + dilation[d] * (kernel_size[d] - 1)
         )
 
     min_sizes = [dim_size(d) for d in range(k)]

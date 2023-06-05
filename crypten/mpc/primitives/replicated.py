@@ -8,8 +8,9 @@
 # This file implements Replicated Secret Sharing protocols
 # from the CryptGPU repo
 
-import crypten.communicator as comm
 import torch
+
+import crypten.communicator as comm
 
 
 def replicate_shares(share_list):
@@ -95,7 +96,7 @@ def square(x):
     (x_shares,) = replicate_shares([x.share])
     x1, x2 = x_shares
 
-    x_square = x1**2 + 2 * x1 * x2
+    x_square = x1 ** 2 + 2 * x1 * x2
 
     z = x.shallow_copy()
     z.share = x_square

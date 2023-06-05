@@ -8,14 +8,14 @@
 import logging
 import tempfile
 
-import crypten
 import torch
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
+
+import crypten
 from examples.meters import AccuracyMeter
 from examples.util import NoopContextManager
-
 
 try:
     from crypten.nn.tensorboard import SummaryWriter
@@ -24,18 +24,18 @@ except ImportError:  # tensorboard not installed
 
 
 def run_experiment(
-    model_name,
-    imagenet_folder=None,
-    tensorboard_folder="/tmp",
-    num_samples=None,
-    context_manager=None,
+        model_name,
+        imagenet_folder=None,
+        tensorboard_folder="/tmp",
+        num_samples=None,
+        context_manager=None,
 ):
     """Runs inference using specified vision model on specified dataset."""
 
     crypten.init()
     # check inputs:
     assert hasattr(models, model_name), (
-        "torchvision does not provide %s model" % model_name
+            "torchvision does not provide %s model" % model_name
     )
     if imagenet_folder is None:
         imagenet_folder = tempfile.gettempdir()

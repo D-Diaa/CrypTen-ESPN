@@ -10,9 +10,9 @@ import torch
 import crypten.communicator as comm
 from crypten.common.rng import generate_kbit_random_tensor, generate_random_ring_element, zeros, ones
 from crypten.common.util import count_wraps, torch_stack
+from crypten.config import cfg
 from crypten.mpc.primitives import ArithmeticSharedTensor, BinarySharedTensor
 from .provider import TupleProvider
-from crypten.config import cfg
 
 
 class TrustedFirstParty(TupleProvider):

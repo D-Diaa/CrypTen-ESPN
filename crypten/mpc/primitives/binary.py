@@ -5,19 +5,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten.communicator as comm
-
 # dependencies:
 import torch
+
+import crypten.communicator as comm
 from crypten.common.functions import regular
 from crypten.common.rng import generate_kbit_random_tensor
 from crypten.common.tensor_types import is_tensor
 from crypten.common.util import torch_cat, torch_stack
 from crypten.cuda import CUDALongTensor
 from crypten.encoder import FixedPointEncoder
-
 from . import beaver, circuit
-
 
 SENTINEL = -1
 
@@ -33,7 +31,7 @@ class BinarySharedTensor(object):
     """
 
     def __init__(
-        self, tensor=None, size=None, broadcast_size=False, src=0, device=None
+            self, tensor=None, size=None, broadcast_size=False, src=0, device=None
     ):
         """
         Creates the shared tensor from the input `tensor` provided by party `src`.
@@ -59,17 +57,17 @@ class BinarySharedTensor(object):
 
         # assertions on inputs:
         assert (
-            isinstance(src, int) and src >= 0 and src < comm.get().get_world_size()
+                isinstance(src, int) and src >= 0 and src < comm.get().get_world_size()
         ), "specified source party does not exist"
         if self.rank == src:
             assert tensor is not None, "source must provide a data tensor"
             if hasattr(tensor, "src"):
                 assert (
-                    tensor.src == src
+                        tensor.src == src
                 ), "source of data tensor must match source of encryption"
         if not broadcast_size:
             assert (
-                tensor is not None or size is not None
+                    tensor is not None or size is not None
             ), "must specify tensor or size, or set broadcast_size"
 
         # if device is unspecified, try and get it from tensor:
@@ -350,7 +348,7 @@ class BinarySharedTensor(object):
                 extra = x[0]
                 x = x[1:]
             x0 = x[: (x.size(0) // 2)]
-            x1 = x[(x.size(0) // 2) :]
+            x1 = x[(x.size(0) // 2):]
             x = x0 + x1
             if extra is not None:
                 x.share = torch_cat([x.share, extra.share.unsqueeze(0)])

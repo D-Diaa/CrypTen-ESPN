@@ -10,7 +10,6 @@ import subprocess
 import uuid
 from argparse import ArgumentParser, REMAINDER
 
-
 """
 Wrapper to launch MPC scripts as multiple processes.
 """
@@ -53,8 +52,8 @@ def parse_args():
     """
     parser = ArgumentParser(
         description="PyTorch distributed training launch "
-        "helper utilty that will spawn up "
-        "parties for MPC scripts"
+                    "helper utilty that will spawn up "
+                    "parties for MPC scripts"
     )
 
     # Optional arguments for the launch helper
@@ -70,9 +69,9 @@ def parse_args():
         "training_script",
         type=str,
         help="The full path to the single GPU training "
-        "program/script to be launched in parallel, "
-        "followed by all the arguments for the "
-        "training script",
+             "program/script to be launched in parallel, "
+             "followed by all the arguments for the "
+             "training script",
     )
 
     # rest from the training program

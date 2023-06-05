@@ -5,8 +5,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten
 import torch
+
+import crypten
 from crypten.config import cfg
 from crypten.debug import configure_logging, pdb
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
@@ -32,7 +33,7 @@ class TestDebug(MultiProcessTestCase):
     def test_wrap_error_detection(self):
         """Force a wrap error and test whether it raises in debug mode."""
         encrypted_tensor = crypten.cryptensor(0)
-        encrypted_tensor.share = torch.tensor(2**63 - 1)
+        encrypted_tensor.share = torch.tensor(2 ** 63 - 1)
         with self.assertRaises(ValueError):
             encrypted_tensor.div(2)
 

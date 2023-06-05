@@ -37,7 +37,6 @@ import os
 
 from examples.multiprocess_launcher import MultiProcessLauncher
 
-
 parser = argparse.ArgumentParser(description="CrypTen Cifar Training")
 parser.add_argument(
     "--world_size",

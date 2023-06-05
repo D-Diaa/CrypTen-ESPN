@@ -11,7 +11,6 @@ from typing import List
 
 import crypten.communicator as comm
 
-
 """
     I dont think random modular is secure enough, but we can live with it for testing purpose
 
@@ -125,8 +124,8 @@ class BaseOT:
             masks_for_message1s.append(mask_for_message1)
             if choices[i]:
                 masks_for_choices[i] = (
-                    masks_for_choices[i] * mask_for_message1
-                ) % self.__prime
+                                               masks_for_choices[i] * mask_for_message1
+                                       ) % self.__prime
 
         for i in range(len(choices)):
             # send mask_for_choice

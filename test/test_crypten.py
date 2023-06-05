@@ -13,15 +13,16 @@ import random
 import unittest
 from collections import defaultdict
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn.functional as F
+from torch import nn
+
+import crypten
+import crypten.communicator as comm
 from crypten.common import serial
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
-from torch import nn
 
 
 class TestCrypten(MultiProcessTestCase):
@@ -59,15 +60,15 @@ class TestCrypten(MultiProcessTestCase):
         # Check that each party has two unique generators for next and prev seeds
         for device in crypten.generators["prev"].keys():
             t0 = torch.randint(
-                -(2**63),
-                2**63 - 1,
+                -(2 ** 63),
+                2 ** 63 - 1,
                 (1,),
                 device=device,
                 generator=crypten.generators["prev"][device],
             )
             t1 = torch.randint(
-                -(2**63),
-                2**63 - 1,
+                -(2 ** 63),
+                2 ** 63 - 1,
                 (1,),
                 device=device,
                 generator=crypten.generators["next"][device],
@@ -110,9 +111,9 @@ class TestCrypten(MultiProcessTestCase):
                 ].initial_seed()
 
         # User-generated seeds
-        next_seed = random.randint(0, 2**63 - 1)
-        local_seed = random.randint(0, 2**63 - 1)
-        global_seed = random.randint(0, 2**63 - 1)
+        next_seed = random.randint(0, 2 ** 63 - 1)
+        local_seed = random.randint(0, 2 ** 63 - 1)
+        global_seed = random.randint(0, 2 ** 63 - 1)
 
         # Store expected seeds
         expected_seeds = {}
@@ -270,8 +271,8 @@ class TestCrypten(MultiProcessTestCase):
                 a
                 for a in dir(cryptensor1)
                 if not a.startswith("__")
-                and not callable(getattr(cryptensor1, a))
-                and a not in ["share", "_tensor", "ctx"]
+                   and not callable(getattr(cryptensor1, a))
+                   and a not in ["share", "_tensor", "ctx"]
             ]
             for a in attributes:
                 attr1, attr2 = getattr(cryptensor1, a), getattr(cryptensor2, a)
@@ -393,7 +394,7 @@ class TestCrypten(MultiProcessTestCase):
             encrypted_tensor2 = y_type(tensor2)
 
             condition_tensor = (
-                get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
+                    get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
             )
             condition_encrypted = crypten.cryptensor(condition_tensor)
             condition_bool = condition_tensor.bool()

@@ -5,17 +5,17 @@ from torchvision.transforms.functional import InterpolationMode
 
 class ClassificationPresetTrain:
     def __init__(
-        self,
-        *,
-        crop_size,
-        mean=(0.485, 0.456, 0.406),
-        std=(0.229, 0.224, 0.225),
-        interpolation=InterpolationMode.BILINEAR,
-        hflip_prob=0.5,
-        auto_augment_policy=None,
-        ra_magnitude=9,
-        augmix_severity=3,
-        random_erase_prob=0.0,
+            self,
+            *,
+            crop_size,
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225),
+            interpolation=InterpolationMode.BILINEAR,
+            hflip_prob=0.5,
+            auto_augment_policy=None,
+            ra_magnitude=9,
+            augmix_severity=3,
+            random_erase_prob=0.0,
     ):
         trans = [transforms.RandomResizedCrop(crop_size, interpolation=interpolation)]
         if hflip_prob > 0:
@@ -48,15 +48,14 @@ class ClassificationPresetTrain:
 
 class ClassificationPresetEval:
     def __init__(
-        self,
-        *,
-        crop_size,
-        resize_size=256,
-        mean=(0.485, 0.456, 0.406),
-        std=(0.229, 0.224, 0.225),
-        interpolation=InterpolationMode.BILINEAR,
+            self,
+            *,
+            crop_size,
+            resize_size=256,
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225),
+            interpolation=InterpolationMode.BILINEAR,
     ):
-
         self.transforms = transforms.Compose(
             [
                 transforms.Resize(resize_size, interpolation=interpolation),

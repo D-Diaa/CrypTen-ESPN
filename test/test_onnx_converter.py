@@ -8,11 +8,11 @@
 import collections
 import io
 import logging
-import os
 import unittest
 
-import crypten
 import torch
+
+import crypten
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from crypten.nn import onnx_converter
@@ -59,7 +59,7 @@ class TestOnnxConverter(object):
         for name, param in model.named_parameters(recurse=False):
             local_name = init_name + "_" + name
             reference[local_name] = (
-                param.get_plain_text() - learning_rate * param.grad.get_plain_text()
+                    param.get_plain_text() - learning_rate * param.grad.get_plain_text()
             )
         for name, module in model._modules.items():
             local_name = init_name + "_" + name
@@ -258,7 +258,7 @@ class TestOnnxConverter(object):
         self._check_model_export(model, x_train)
 
     def _check_training(
-        self, model, x_train, y_train, loss_name, num_epochs=2, learning_rate=0.001
+            self, model, x_train, y_train, loss_name, num_epochs=2, learning_rate=0.001
     ):
         """Verifies gradient updates and loss decreases during training"""
         # create loss function

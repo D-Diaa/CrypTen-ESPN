@@ -18,13 +18,13 @@ __all__ = [
 
 
 def max_pool2d(
-    self,
-    kernel_size,
-    padding=0,
-    stride=None,
-    dilation=1,
-    ceil_mode=False,
-    return_indices=False,
+        self,
+        kernel_size,
+        padding=0,
+        stride=None,
+        dilation=1,
+        ceil_mode=False,
+        return_indices=False,
 ):
     """Applies a 2D max pooling over an input signal composed of several
     input planes.
@@ -40,7 +40,7 @@ def max_pool2d(
         # padding with extremely negative values to avoid choosing pads.
         # The magnitude of this value should not be too large because
         # multiplication can otherwise fail.
-        pad_value=(-(2**24)),
+        pad_value=(-(2 ** 24)),
         # TODO: Find a better solution for padding with max_pooling
     )
     max_vals, argmax_vals = max_input.max(dim=-1, one_hot=True)
@@ -54,14 +54,14 @@ def max_pool2d(
 
 
 def _max_pool2d_backward(
-    self,
-    indices,
-    kernel_size,
-    padding=None,
-    stride=None,
-    dilation=1,
-    ceil_mode=False,
-    output_size=None,
+        self,
+        indices,
+        kernel_size,
+        padding=None,
+        stride=None,
+        dilation=1,
+        ceil_mode=False,
+        output_size=None,
 ):
     """Implements the backwards for a `max_pool2d` call."""
     # Setup padding
@@ -94,7 +94,7 @@ def _max_pool2d_backward(
 
     assert self.dim() == 4, "Input to _max_pool2d_backward must have 4 dimensions"
     assert (
-        indices.dim() == 6
+            indices.dim() == 6
     ), "Indices input for _max_pool2d_backward must have 6 dimensions"
 
     # Computes one-hot gradient blocks from each output variable that
@@ -131,16 +131,16 @@ def _max_pool2d_backward(
             top_ind = s1 * j
 
             result[
-                :,
-                :,
-                left_ind : left_ind + k0 * d0 : d0,
-                top_ind : top_ind + k1 * d1 : d1,
+            :,
+            :,
+            left_ind: left_ind + k0 * d0: d0,
+            top_ind: top_ind + k1 * d1: d1,
             ] += kernels[:, :, i, j]
 
     # Remove input padding
     if ceil_mode:
         result = result[:, :, : result.size(2) - c0, : result.size(3) - c1]
-    result = result[:, :, p0 : result.size(2) - p0, p1 : result.size(3) - p1]
+    result = result[:, :, p0: result.size(2) - p0, p1: result.size(3) - p1]
 
     return result
 
@@ -319,7 +319,7 @@ def _adaptive_pool2d_helper(input, output_size, reduction="mean"):
 
 
 def _pooling_output_shape(
-    input_size, kernel_size, pad_l, pad_r, stride, dilation, ceil_mode
+        input_size, kernel_size, pad_l, pad_r, stride, dilation, ceil_mode
 ):
     """
     Generates output shape along a single dimension following conventions here:
@@ -340,13 +340,13 @@ def _pooling_output_shape(
 
 
 def _pool2d_reshape(
-    input,
-    kernel_size,
-    padding=None,
-    stride=None,
-    dilation=1,
-    ceil_mode=False,
-    pad_value=0,
+        input,
+        kernel_size,
+        padding=None,
+        stride=None,
+        dilation=1,
+        ceil_mode=False,
+        pad_value=0,
 ):
     """Rearrange a 4-d tensor so that each kernel is represented by each row"""
 

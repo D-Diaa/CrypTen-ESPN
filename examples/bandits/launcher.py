@@ -25,12 +25,13 @@ import logging
 import os
 import random
 
-import examples.util
 import torch
 import visdom
+from torchvision.datasets.mnist import MNIST
+
+import examples.util
 from examples.multiprocess_launcher import MultiProcessLauncher
 from examples.util import NoopContextManager, process_mnist_files
-from torchvision.datasets.mnist import MNIST
 
 
 def learning_curve(visualizer, idx, value, window=None, title=""):
@@ -77,11 +78,11 @@ def download_mnist(split="train"):
 
 
 def load_data(
-    split="train",
-    pca=None,
-    clusters=None,
-    bandwidth=1.0,
-    download_mnist_func=download_mnist,
+        split="train",
+        pca=None,
+        clusters=None,
+        bandwidth=1.0,
+        download_mnist_func=download_mnist,
 ):
     """
     Loads split from the MNIST dataset and returns data.
@@ -116,12 +117,12 @@ def load_data(
 
 
 def load_data_sampler(
-    split="train",
-    pca=None,
-    clusters=None,
-    bandwidth=1.0,
-    permfile=None,
-    download_mnist_func=download_mnist,
+        split="train",
+        pca=None,
+        clusters=None,
+        bandwidth=1.0,
+        permfile=None,
+        download_mnist_func=download_mnist,
 ):
     """
     Loads split from the MNIST dataset and returns sampler.
@@ -387,8 +388,8 @@ def build_learner(args, bandits, download_mnist):
 
             # run clustering in process 0:
             if (
-                not torch.distributed.is_initialized()
-                or torch.distributed.get_rank() == 0
+                    not torch.distributed.is_initialized()
+                    or torch.distributed.get_rank() == 0
             ):
                 logging.info("Performing clustering to get arms...")
                 clusters = examples.util.kmeans(context, args.number_arms)

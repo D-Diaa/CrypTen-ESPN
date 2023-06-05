@@ -5,9 +5,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten
 import torch
 
+import crypten
 from .module import Module
 
 
@@ -36,7 +36,7 @@ class _Loss(Module):
         def forward_function(*args, **kwargs):
             """Silently encrypt Torch tensors if needed."""
             if self.encrypted or any(
-                isinstance(arg, crypten.CrypTensor) for arg in args
+                    isinstance(arg, crypten.CrypTensor) for arg in args
             ):
                 args = list(args)
                 for idx, arg in enumerate(args):

@@ -7,10 +7,10 @@
 
 import math
 
-import crypten
 import torch
-from crypten.config import cfg
 
+import crypten
+from crypten.config import cfg
 
 __all__ = [
     "argmax",
@@ -275,7 +275,7 @@ def _argmax_helper_all_tree_reductions(enc_tensor, dim=None, method="log_reducti
 
 
 def _argmax_helper(
-    enc_tensor, dim=None, one_hot=True, method="pairwise", _return_max=False
+        enc_tensor, dim=None, one_hot=True, method="pairwise", _return_max=False
 ):
     """
     Returns 1 for one randomly chosen element among all the elements that have

@@ -9,9 +9,10 @@ import logging
 import random
 import unittest
 
+import torch
+
 import crypten
 import crypten.gradients as gradients
-import torch
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from crypten.gradients import AutogradContext, AutogradFunction
@@ -188,7 +189,6 @@ class TestAutograd(object):
         """Tests that detach() works as expected."""
 
         for func_name in ["detach", "detach_"]:
-
             # get test case:
             input_size = (12, 5)
             input1 = get_random_test_tensor(size=input_size, is_float=True)
@@ -360,7 +360,6 @@ class TestAutograd(object):
             if callable(value) and key.startswith("test_case")
         ]
         for idx, test_case in enumerate(test_cases):
-
             # get input tensors:
             input = get_random_test_tensor(size=(12, 5), is_float=True)
             input.requires_grad = True
@@ -385,7 +384,6 @@ class TestAutograd(object):
 
         # test cases in which tensor gets combined with itself:
         for func_name in ["sub", "add", "mul"]:
-
             # get input tensors:
             input = get_random_test_tensor(size=(12, 5), is_float=True)
             input.requires_grad = True
@@ -472,7 +470,6 @@ class TestAutograd(object):
 
         # re-use the same input multiple times:
         for _ in range(7):
-
             # perform forward pass:
             output = input.exp().sum()
             encr_output = encr_input.exp().sum()

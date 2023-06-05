@@ -6,17 +6,17 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
+
 from crypten import communicator as comm
 from crypten.common.tensor_types import is_tensor
 from crypten.common.util import torch_stack
 from crypten.config import cfg
 from crypten.cuda import CUDALongTensor
-
-from ..cryptensor import CrypTensor
-from ..encoder import FixedPointEncoder
 from .primitives.binary import BinarySharedTensor
 from .primitives.converters import convert
 from .ptype import ptype as Ptype
+from ..cryptensor import CrypTensor
+from ..encoder import FixedPointEncoder
 
 
 @CrypTensor.register_cryptensor("mpc")

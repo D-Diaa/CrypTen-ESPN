@@ -7,9 +7,10 @@
 
 import os
 
+import torch
+
 import crypten
 import crypten.communicator as comm
-import torch
 
 
 class TupleProvider:
@@ -116,7 +117,6 @@ class TupleProvider:
 
         # Trace requests while tracing
         if self.tracing:
-
             def func_with_trace(*args, **kwargs):
                 request = (func_name, args, kwargs)
                 self.request_cache.append(request)

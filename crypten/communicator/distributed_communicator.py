@@ -15,10 +15,10 @@ import time
 import numpy
 import torch
 import torch.distributed as dist
-from crypten.common import serial
 from torch.distributed import ReduceOp
-from crypten.config import cfg
 
+from crypten.common import serial
+from crypten.config import cfg
 from .communicator import _logging, Communicator
 
 

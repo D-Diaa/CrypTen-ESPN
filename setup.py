@@ -11,7 +11,6 @@ import sys
 
 import setuptools
 
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "crypten"))
 
 # Read description and requirements.

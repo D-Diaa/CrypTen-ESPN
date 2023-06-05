@@ -115,9 +115,12 @@ class ModulusNet_vgg16_bn(nn.Module):
             self.input_layer,
             self.conv1, self.bn1, self.relu, self.conv2, self.bn2, self.pool, self.relu,
             self.conv3, self.bn3, self.relu, self.conv4, self.bn4, self.pool, self.relu,
-            self.conv5, self.bn5, self.relu, self.conv6, self.bn6, self.relu, self.conv7, self.bn7, self.pool, self.relu,
-            self.conv8, self.bn8, self.relu, self.conv9, self.bn9, self.relu, self.conv10, self.bn10, self.pool, self.relu,
-            self.conv11, self.bn11, self.relu, self.conv12, self.bn12, self.relu, self.conv13, self.bn13, self.pool, self.relu,
+            self.conv5, self.bn5, self.relu, self.conv6, self.bn6, self.relu, self.conv7, self.bn7, self.pool,
+            self.relu,
+            self.conv8, self.bn8, self.relu, self.conv9, self.bn9, self.relu, self.conv10, self.bn10, self.pool,
+            self.relu,
+            self.conv11, self.bn11, self.relu, self.conv12, self.bn12, self.relu, self.conv13, self.bn13, self.pool,
+            self.relu,
         )
         self.classifier = nn.Sequential(
             self.fc1, self.relu,

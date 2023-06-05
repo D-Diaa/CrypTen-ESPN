@@ -5,10 +5,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn as nn
+
+import crypten
+import crypten.communicator as comm
 from crypten.config import cfg
 from crypten.gradients import _inverse_broadcast
 
@@ -111,14 +112,14 @@ class DPSplitModel(nn.Module):
     """
 
     def __init__(
-        self,
-        pytorch_model,
-        feature_src,
-        label_src,
-        noise_magnitude=None,
-        noise_src=None,
-        randomized_response_prob=None,
-        rappor_prob=None,
+            self,
+            pytorch_model,
+            feature_src,
+            label_src,
+            noise_magnitude=None,
+            noise_src=None,
+            randomized_response_prob=None,
+            rappor_prob=None,
     ):
         super().__init__()
 
@@ -140,7 +141,7 @@ class DPSplitModel(nn.Module):
         # Process Randomized Response parameters
         if randomized_response_prob is not None:
             assert (
-                0 < randomized_response_prob < 0.5
+                    0 < randomized_response_prob < 0.5
             ), "randomized_response_prob must be in the interval [0, 0.5)"
         self.rr_prob = randomized_response_prob
 
@@ -470,7 +471,7 @@ class DPSplitModel(nn.Module):
             ind = 0
             for param in self.model.parameters():
                 numel = param.numel()
-                param.grad = grads[ind : ind + numel].view(param.size())
+                param.grad = grads[ind: ind + numel].view(param.size())
                 ind += numel
 
     def _solve_dLdZ(self, dLdW):

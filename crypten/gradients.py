@@ -9,11 +9,10 @@ import logging
 import math
 from functools import reduce
 
-import crypten
 import torch
 
+import crypten
 from .common.util import _grad_input_padding
-
 
 # registry that maps function names to AutogradFunctions:
 FUNCTION_REGISTRY = {}
@@ -1519,14 +1518,14 @@ class AutogradAvgPool2D(AutogradFunction):
 class AutogradMaxPool2D(AutogradFunction):
     @staticmethod
     def forward(
-        ctx,
-        input,
-        kernel_size,
-        padding=0,
-        stride=None,
-        dilation=1,
-        ceil_mode=False,
-        return_indices=False,
+            ctx,
+            input,
+            kernel_size,
+            padding=0,
+            stride=None,
+            dilation=1,
+            ceil_mode=False,
+            return_indices=False,
     ):
 
         # preprocess inputs:
@@ -1761,16 +1760,16 @@ class AutogradConv2D(AutogradFunction):
 class AutogradBatchNorm(AutogradFunction):
     @staticmethod
     def forward(
-        ctx,
-        x,
-        weight,
-        bias,
-        running_mean=None,
-        running_var=None,
-        training=False,
-        eps=1e-05,
-        momentum=0.1,
-        inv_var=None,
+            ctx,
+            x,
+            weight,
+            bias,
+            running_mean=None,
+            running_var=None,
+            training=False,
+            eps=1e-05,
+            momentum=0.1,
+            inv_var=None,
     ):
         """
         Computes forward step of batch norm by normalizing x
@@ -1887,7 +1886,6 @@ class AutogradBatchNorm(AutogradFunction):
         grad_output = grad_output.mul(weight)
         grad_input = grad_output.mul(inv_var)
         if training:
-
             # compute gradient term that is due to the mean:
             num_element = reduce(
                 lambda x, y: x * y, [grad_output.size(d) for d in stats_dimensions]
@@ -1940,7 +1938,7 @@ class AutogradBinaryCrossEntropyWithLogits(AutogradFunction):
     def forward(ctx, logit, target, skip_forward=False):
         sigmoid_out = logit.sigmoid()
         assert (
-            sigmoid_out.size() == target.size()
+                sigmoid_out.size() == target.size()
         ), "Incorrect input sizes for binary_cross_entropy_with_logits"
         ctx.mark_non_differentiable(target)
         ctx.save_multiple_for_backward([target, sigmoid_out])
@@ -1967,7 +1965,7 @@ class AutogradRAPPORLoss(AutogradFunction):
     @staticmethod
     def forward(ctx, logit, target, alpha, skip_forward=False):
         assert (
-            logit.size() == target.size()
+                logit.size() == target.size()
         ), "Logit and target sizes must match for rappor loss"
         pred = logit.sigmoid()
         ctx.mark_non_differentiable(target)

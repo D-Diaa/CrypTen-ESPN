@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import numpy as np
 import scipy
+import torch
+
+
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
-import torch
-import numpy as np
 
 
 class AverageMeter:

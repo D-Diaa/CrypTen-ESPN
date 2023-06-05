@@ -14,15 +14,16 @@ import unittest
 import warnings
 from functools import wraps
 
-import crypten.communicator as comm
-import crypten.debug
 import torch
 import torch.distributed as dist
+
+import crypten.communicator as comm
+import crypten.debug
 from crypten.config import cfg
 
 
 def get_random_test_tensor(
-    max_value=6, min_value=None, size=(1, 5), is_float=False, ex_zero=False, device=None
+        max_value=6, min_value=None, size=(1, 5), is_float=False, ex_zero=False, device=None
 ):
     """Generates random tensor for testing
 
@@ -39,8 +40,8 @@ def get_random_test_tensor(
         min_value = -max_value
     if is_float:
         tensor = (
-            torch.rand(torch.Size(size), device=device) * (max_value - min_value)
-            + min_value
+                torch.rand(torch.Size(size), device=device) * (max_value - min_value)
+                + min_value
         )
     else:
         tensor = torch.randint(

@@ -9,7 +9,6 @@ from .communicator import Communicator
 from .distributed_communicator import DistributedCommunicator
 from .in_process_communicator import InProcessCommunicator
 
-
 __use_threads = False
 
 

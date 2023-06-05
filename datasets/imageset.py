@@ -5,8 +5,10 @@ from torch.utils import data
 
 class Dataset(data.Dataset):
     """ The base class for an arbitrary dataset. """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
 
 class ImageSet(Dataset):
     """ The base class for an image dataset. """

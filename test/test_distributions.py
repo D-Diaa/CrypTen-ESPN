@@ -8,8 +8,9 @@
 
 import math
 
-import crypten
 import torch
+
+import crypten
 from crypten.config import cfg
 from test.multiprocess_test_case import MultiProcessTestCase
 
@@ -20,7 +21,7 @@ class TestDistributions(object):
     """
 
     def _check_distribution(
-        self, func, expected_mean, expected_variance, lb=None, ub=None
+            self, func, expected_mean, expected_variance, lb=None, ub=None
     ):
         """
         Checks that the function `func` returns a distribution with the expected
@@ -71,7 +72,6 @@ class TestDistributions(object):
 
     def test_bernoulli(self):
         for p in [0.25 * i for i in range(5)]:
-
             def bernoulli(*size):
                 x = crypten.cryptensor(p * torch.ones(*size))
                 return x.bernoulli()

@@ -1,13 +1,14 @@
 import os.path
-from scipy import interpolate
-import yaml
+
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
+from scipy import interpolate
 
 # models = ["resnet18", "resnet32", "resnet50", "resnet110", "minionn", "vgg16_bn"]
 # datasets = ["cifar10", "cifar100"]
 datasets = ["cifar10", "cifar100", "imagenet"]
-configs = ["default12", "crypten12", "honeybadger12", "florian12", "gforce", "coinn"]
+configs = ["default12", "crypten12", "honeybadger12", "espn12", "gforce", "coinn"]
 delay_range = np.arange(0, 0.055, 0.005)
 colors = ["r", "g", "k", "m", "b"]
 styles = ["-", "--"]
@@ -28,11 +29,13 @@ for dataset in datasets:
                     results = yaml.safe_load(f)
                 fmt_str = colors[c]
                 fmean = interpolate.interp1d(results['delays'], results['run_time'], fill_value='extrapolate')
-                flow = interpolate.interp1d(results['delays'], results['run_time_95conf_lower'], fill_value='extrapolate')
-                fupp = interpolate.interp1d(results['delays'], results['run_time_95conf_upper'], fill_value='extrapolate')
+                flow = interpolate.interp1d(results['delays'], results['run_time_95conf_lower'],
+                                            fill_value='extrapolate')
+                fupp = interpolate.interp1d(results['delays'], results['run_time_95conf_upper'],
+                                            fill_value='extrapolate')
 
-                plt.plot(2000*delay_range, fmean(delay_range), fmt_str, label=label)
-                plt.fill_between(2000*delay_range, flow(delay_range), fupp(delay_range),
+                plt.plot(2000 * delay_range, fmean(delay_range), fmt_str, label=label)
+                plt.fill_between(2000 * delay_range, flow(delay_range), fupp(delay_range),
                                  color=colors[c], alpha=0.3)
             else:
                 print(results_file + " is not found")

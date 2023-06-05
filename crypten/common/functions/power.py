@@ -5,14 +5,15 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import torch
+
 import crypten
 import crypten.communicator as comm
-import torch
 from crypten.config import cfg
 from ..tensor_types import is_tensor
 
 __all__ = ["norm", "polynomial", "pos_pow", "pow", "crypten_poly",
-           "florian_poly", "florian_pow",
+           "espn_poly", "espn_pow",
            "honeybadger_poly"]
 
 from ...cuda import CUDALongTensor
@@ -100,7 +101,7 @@ def get_ncr(degree, scale, coeffs):
     return nCr
 
 
-def florian_pow(self, k):
+def espn_pow(self, k):
     """Perform element-wise exponentiation by constant k"""
     assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
 
@@ -125,7 +126,7 @@ def florian_pow(self, k):
     return ans
 
 
-def florian_poly(self, coeffs):
+def espn_poly(self, coeffs):
     """Perform element-wise polynomial evaluation using fast_pow"""
     assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
     # coeffs = torch.cat([torch.tensor([0.0], device=self.device), coeffs])
@@ -143,7 +144,7 @@ def florian_poly(self, coeffs):
     # powers += [torch.pow(self.share, i) for i in range(2, degree + 1)]
     exps = torch.tensor(range(degree + 1), device=self.device).unsqueeze(1)
     powers = self.share.unsqueeze(0).repeat(degree + 1, 1)
-    powers = powers**exps
+    powers = powers ** exps
 
     """Power replication"""
     # with Timer("Replication"):
@@ -228,8 +229,8 @@ def polynomial(self, coeffs, func="mul"):
 
     if cfg.functions.poly_method == "crypten":
         return self.crypten_poly(coeffs, func)
-    elif cfg.functions.poly_method == "florian":
-        return self.florian_poly(coeffs)
+    elif cfg.functions.poly_method == "espn":
+        return self.espn_poly(coeffs)
     elif cfg.functions.poly_method == "honeybadger":
         return self.honeybadger_poly(coeffs)
     elif cfg.functions.poly_method == "polymath":

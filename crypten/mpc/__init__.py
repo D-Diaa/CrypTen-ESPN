@@ -12,7 +12,6 @@ from .context import run_multiprocess
 from .mpc import MPCTensor
 from .ptype import ptype
 
-
 __all__ = [
     "MPCTensor",
     "primitives",

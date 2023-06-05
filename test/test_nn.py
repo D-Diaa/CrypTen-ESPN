@@ -10,10 +10,11 @@ import itertools
 import logging
 import unittest
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn.functional as F
+
+import crypten
+import crypten.communicator as comm
 from crypten.common.rng import generate_random_ring_element
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
@@ -68,7 +69,7 @@ class TestNN(object):
         for name, param in model.named_parameters(recurse=False):
             local_name = init_name + "_" + name
             reference[local_name] = (
-                param.get_plain_text() - learning_rate * param.grad.get_plain_text()
+                    param.get_plain_text() - learning_rate * param.grad.get_plain_text()
             )
         for name, module in model.named_children():
             local_name = init_name + "_" + name
@@ -301,8 +302,8 @@ class TestNN(object):
             "Reshape": lambda x: x[0].reshape(module_args["Reshape"][0]),
             "Shape": lambda x: torch.tensor(x.size()).float(),
             "Slice": lambda x: x[
-                module_args["Slice"][0][0] : module_args["Slice"][1][0], :
-            ],
+                               module_args["Slice"][0][0]: module_args["Slice"][1][0], :
+                               ],
             "Sqrt": lambda x: x.sqrt(),
             "Sub": lambda x: x[0] - x[1],
             "Sum": lambda x: torch.sum(
@@ -529,7 +530,7 @@ class TestNN(object):
 
         # loop over all modules:
         for module_name, from_pytorch, compute_gradients in itertools.product(
-            module_args.keys(), [False, True], [False, True]
+                module_args.keys(), [False, True], [False, True]
         ):
             # some modules cannot be produced by the ONNX exporter:
             if from_pytorch and module_name in not_produced_by_onnx:
@@ -1716,7 +1717,7 @@ class TestNN(object):
         only_two_dims = ["sparse_"]
         args_dict = {"constant_": (0.5,), "sparse_": (0.2,)}
         for init, size, private in itertools.product(
-            deterministic + non_deterministic, sizes, [False, True]
+                deterministic + non_deterministic, sizes, [False, True]
         ):
             if len(size) < 3 and init in requires_more_dims:
                 continue

@@ -7,15 +7,14 @@
 
 import sys
 
-import crypten
 import torch
 import torchvision
-from multiprocess_launcher import MultiProcessLauncher
 
+import crypten
+from multiprocess_launcher import MultiProcessLauncher
 
 # python 3.7 is required
 assert sys.version_info[0] == 3 and sys.version_info[1] == 7, "python 3.7 is required"
-
 
 # Alice is party 0
 ALICE = 0

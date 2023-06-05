@@ -9,12 +9,11 @@ from math import ceil
 import torch
 import yaml
 
-from crypten.config import cfg
 import crypten
+from crypten import communicator as comm
+from crypten.config import cfg
 from examples.meters import AverageMeter
 from examples.multiprocess_launcher import MultiProcessLauncher
-from crypten import communicator as comm
-import matplotlib.pyplot as plt
 
 
 def get_range(start, end, step):
@@ -77,9 +76,9 @@ def relu_compare_run(n_points=32768, repeats=20, delay=0.0, device=torch.device(
             ans = x_input.relu()
             return ans.get_plain_text()
 
-        def florian():
+        def espn():
             cfg.functions.relu_method = "poly"
-            cfg.functions.poly_method = "florian"
+            cfg.functions.poly_method = "espn"
             ans = x_input.relu()
             return ans.get_plain_text()
 
@@ -98,7 +97,7 @@ def relu_compare_run(n_points=32768, repeats=20, delay=0.0, device=torch.device(
 
         o_c, t_c, avg_c, comm_c = timeit(crypten_poly, x_input.size(0))
         time_c.add(t_c, 1)
-        o_f, t_f, avg_f, comm_f = timeit(florian, x_input.size(0))
+        o_f, t_f, avg_f, comm_f = timeit(espn, x_input.size(0))
         time_f.add(t_f, 1)
         o_h, t_h, avg_h, comm_h = timeit(honeybadger, x_input.size(0))
         time_h.add(t_h, 1)
@@ -118,7 +117,7 @@ def relu_compare_run(n_points=32768, repeats=20, delay=0.0, device=torch.device(
         logging.info(
             "-----------------------------------------------------------------------------\n"
             "crypten time: {:.2f} ({:.2f})| rounds: {} | bytes: {} | err: {:.5f}\n"
-            "florian time: {:.2f} ({:.2f})| rounds: {} | bytes: {} | err: {:.5f}\n"
+            "espn time: {:.2f} ({:.2f})| rounds: {} | bytes: {} | err: {:.5f}\n"
             "honeybd time: {:.2f} ({:.2f})| rounds: {} | bytes: {} | err: {:.5f}\n"
             "exact_r time: {:.2f} ({:.2f})| rounds: {} | bytes: {} | err: {:.5f}\n"
             "-----------------------------------------------------------------------------"
@@ -153,7 +152,7 @@ def _run_experiment(args):
     if "RANK" in os.environ and os.environ["RANK"] != "0":
         level = logging.CRITICAL
     logging.getLogger().setLevel(level)
-    configs = ['crypten12', 'florian12', 'honeybadger12', 'default12']
+    configs = ['crypten12', 'espn12', 'honeybadger12', 'default12']
     n_points = 32768
     delays = [0.000125, 0.025, 0.05, 0.1]
     devices = [torch.device("cpu"), torch.device("cuda:0")]

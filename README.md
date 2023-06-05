@@ -46,16 +46,19 @@ We also support computation on GPUs.
 Windows **is not** supported.
 
 _For Linux or Mac_
+
 ```bash
 pip install crypten
 ```
 
 If you want to run the examples in the `examples` directory, you should also do the following
+
 ```bash
 pip install -r requirements.examples.txt
 ```
 
 ## Examples
+
 To run the examples in the `examples` directory, you additionally need to clone the repo and
 
 ```bash
@@ -65,16 +68,16 @@ pip install -r requirements.examples.txt
 We provide examples covering a range of models in the `examples` directory
 
 1. The linear SVM example, `mpc_linear_svm`, generates random data and trains a
-  SVM classifier on encrypted data.
+   SVM classifier on encrypted data.
 2. The LeNet example, `mpc_cifar`, trains an adaptation of LeNet on CIFAR in
-  cleartext and encrypts the model and data for inference.
+   cleartext and encrypts the model and data for inference.
 3. The TFE benchmark example, `tfe_benchmarks`, trains three different network
-  architectures on MNIST in cleartext, and encrypts the trained model and data
-  for inference.
+   architectures on MNIST in cleartext, and encrypts the trained model and data
+   for inference.
 4. The bandits example, `bandits`, trains a contextual bandits model on
-  encrypted data (MNIST).
+   encrypted data (MNIST).
 5. The imagenet example, `mpc_imagenet`, performs inference on pretrained
-  models from `torchvision`.
+   models from `torchvision`.
 
 For examples that train in cleartext, we also provide pre-trained models in
 cleartext in the `model` subdirectory of each example subdirectory.
@@ -124,11 +127,14 @@ pip install -r requirements.examples.txt
    automatic differentiation functionality of `CrypTensor`. This functionality
    makes it easy to train neural networks in CrypTen.
 
-
 ## Documentation and citing
+
 CrypTen is documented [here](https://crypten.readthedocs.io/en/latest/).
 
-The protocols and design protocols implemented in CrypTen are described in [this paper](https://arxiv.org/pdf/2109.00984.pdf). If you want to cite CrypTen in your papers (much appreciated!), you can cite it as follows:
+The protocols and design protocols implemented in CrypTen are described
+in [this paper](https://arxiv.org/pdf/2109.00984.pdf). If you want to cite CrypTen in your papers (much appreciated!),
+you can cite it as follows:
+
 ```
 @inproceedings{crypten2020,
   author={B. Knott and S. Venkataraman and A.Y. Hannun and S. Sengupta and M. Ibrahim and L.J.P. van der Maaten},
@@ -139,9 +145,11 @@ The protocols and design protocols implemented in CrypTen are described in [this
 ```
 
 ## Join the CrypTen community
+
 Please contact [us](mailto:ssengupta@fb.com) to join the CrypTen community on [Slack](https://cryptensor.slack.com)
 
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## License
+
 CrypTen is MIT licensed, as found in the LICENSE file.

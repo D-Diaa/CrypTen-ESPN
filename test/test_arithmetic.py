@@ -10,13 +10,11 @@ import itertools
 import logging
 import unittest
 
-import crypten
-import crypten.communicator as comm
 import torch
 import torch.nn.functional as F
-from crypten.common.rng import generate_random_ring_element
+
+import crypten
 from crypten.common.tensor_types import is_float_tensor
-from crypten.common.util import count_wraps
 from crypten.mpc.primitives import ArithmeticSharedTensor
 from test.multiprocess_test_case import get_random_test_tensor, MultiProcessTestCase
 
@@ -477,13 +475,13 @@ class TestArithmetic(MultiProcessTestCase):
         for func_name in ["conv1d", "conv_transpose1d"]:
             for kernel_type in [lambda x: x, ArithmeticSharedTensor]:
                 for (
-                    batches,
-                    kernel_size,
-                    out_channels,
-                    padding,
-                    stride,
-                    dilation,
-                    groups,
+                        batches,
+                        kernel_size,
+                        out_channels,
+                        padding,
+                        stride,
+                        dilation,
+                        groups,
                 ) in itertools.product(
                     nbatches,
                     kernel_sizes,
@@ -547,13 +545,13 @@ class TestArithmetic(MultiProcessTestCase):
         for func_name in ["conv2d", "conv_transpose2d"]:
             for kernel_type in [lambda x: x, ArithmeticSharedTensor]:
                 for (
-                    batches,
-                    kernel_size,
-                    out_channels,
-                    padding,
-                    stride,
-                    dilation,
-                    groups,
+                        batches,
+                        kernel_size,
+                        out_channels,
+                        padding,
+                        stride,
+                        dilation,
+                        groups,
                 ) in itertools.product(
                     nbatches,
                     kernel_sizes,
@@ -880,7 +878,7 @@ class TestArithmetic(MultiProcessTestCase):
             encrypted_tensor2 = y_type(tensor2)
 
             condition_tensor = (
-                get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
+                    get_random_test_tensor(max_value=1, size=size, is_float=False) + 1
             )
             condition_encrypted = ArithmeticSharedTensor(condition_tensor)
             condition_bool = condition_tensor.bool()

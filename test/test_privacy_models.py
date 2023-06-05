@@ -9,8 +9,9 @@ import copy
 import itertools
 import logging
 
-import crypten
 import torch
+
+import crypten
 from crypten.common.tensor_types import is_float_tensor
 from crypten.config import cfg
 from crypten.nn.privacy import DPSplitModel, SkippedLoss
@@ -127,11 +128,11 @@ class TestPrivacyModels(MultiProcessTestCase):
         # TODO: Run multiple batches
         # TODO: ensure this works with other rr_prob values
         for (
-            model_tuple,
-            protocol,
-            rr_prob,
-            rappor_prob,
-            skip_forward,
+                model_tuple,
+                protocol,
+                rr_prob,
+                rappor_prob,
+                skip_forward,
         ) in itertools.product(
             TEST_MODELS, PROTOCOLS, RR_PROBS, RAPPOR_PROBS, [False, True]
         ):
