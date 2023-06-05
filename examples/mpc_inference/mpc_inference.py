@@ -82,7 +82,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
     g = torch.Generator()
     g.manual_seed(0)
     if datatset_name == "cifar10":
-        dataset = CIFAR10(root="/scratch/a2diaa/datasets/cifar10")
+        dataset = CIFAR10(root="../data/cifar10")
         val_loader = dataset.get_dataloader('valid',
                                             shuffle=False,
                                             batch_size=batch_size,
@@ -95,7 +95,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                              (0.2023, 0.1994, 0.2010))])
-        dataset = datasets.CIFAR100(root="/scratch/a2diaa/datasets/cifar100", transform=transform, train=False,
+        dataset = datasets.CIFAR100(root="../data/cifar100", transform=transform, train=False,
                                     download=True)
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,
@@ -111,7 +111,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
             crop_size=224, resize_size=232, interpolation=interpolation
         )
 
-        dataset = datasets.ImageFolder("/scratch/lprfenau/datasets/imagenet/val", preprocessing)
+        dataset = datasets.ImageFolder("../data/imagenet/val", preprocessing)
 
         val_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size,

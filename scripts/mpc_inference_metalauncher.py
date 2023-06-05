@@ -1,7 +1,7 @@
 import os
 
 config_folder = "configs"
-models_folder = "/home/a2diaa/paper_models"
+models_folder = "/home/paper_models"
 batch_size = 1
 
 delays = ["0.000125", "0.025", "0.05"]
@@ -35,7 +35,6 @@ for dataset in datasets:
             #    if model_folder.startswith(f"{model}"):
             #        model_file = f"{models_folder}/{dataset}/{model_folder}/run_{run}/best_model.pth"
             #        print(model_file)
-            #        #model_file = f"/scratch/lprfenau/models/imagenet/temp/best_model.pth"
             #        cmd = base_command + f" --dataset {dataset}" \
             #                             f" --model-type {model} " \
             #                             f"--resume " \
