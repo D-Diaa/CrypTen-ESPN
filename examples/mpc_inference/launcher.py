@@ -57,7 +57,9 @@ parser.add_argument(
     "--model-type",
     default="resnet32",
     type=str,
-    choices=["resnet18", "resnet32", "resnet50", "resnet110", "vgg16", "vgg16_bn", "minionn", "minionn_bn"],
+    choices=["resnet18", "resnet32", "resnet50", "resnet110",
+             "vgg16_avg", "vgg16_avg_bn", "vgg16_max", "vgg16_max_bn",
+             "minionn", "minionn_bn"],
     help="Model architecture",
 )
 

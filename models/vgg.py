@@ -2,11 +2,13 @@ import torch.nn as nn
 
 
 class ModulusNet_vgg16(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, pool='avg'):
         super().__init__()
         self.input_layer = nn.Identity()
-        self.pool = nn.AvgPool2d(2, 2)
-        # self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+        if pool == 'avg':
+            self.pool = nn.AvgPool2d(2, 2)
+        else:
+            self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv1 = nn.Conv2d(3, 64, 3, padding=1)
         self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
 
@@ -58,11 +60,13 @@ class ModulusNet_vgg16(nn.Module):
 
 
 class ModulusNet_vgg16_bn(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, pool="avg"):
         super().__init__()
         self.input_layer = nn.Identity()
-        self.pool = nn.AvgPool2d(2, 2)
-        # self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+        if pool == "avg":
+            self.pool = nn.AvgPool2d(2, 2)
+        else:
+            self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv1 = nn.Conv2d(3, 64, 3, padding=1)
         self.bn1 = nn.BatchNorm2d(64)
         self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
