@@ -17,7 +17,9 @@ models = {
 configs = ["honeybadger12.yaml"]  # In case of Poly
 # configs = ["default12.yaml"]  # In case of CryptGPU
 
-device_commands = ["--use-cuda", ""]
+device_commands = ["--use-cuda"]
+
+runs = range(1, 6)
 
 base_command = f"python3 examples/mpc_inference/launcher.py --multiprocess --world_size 2 " \
                f" --skip-plaintext " \
@@ -27,10 +29,8 @@ base_command += " --delays " + " ".join(delays)
 
 for dataset in datasets:
     for model in models[dataset]:
-        for run in range(1, 6):
+        for run in runs:
             cmd = None
-            # cmd = base_command + f" --dataset {dataset}" \
-            #                      f" --model-type {model} "
             for model_folder in os.listdir(f"{models_folder}/{dataset}"):
                 if model_folder.startswith(f"{model}"):
                     model_file = f"{models_folder}/{dataset}/{model_folder}/run_{run}/best_model.pth"
