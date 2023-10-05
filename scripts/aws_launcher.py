@@ -67,6 +67,8 @@ from pathlib import Path
 import boto3
 import paramiko
 
+from scripts.folder_sftp import FolderSFTPClient
+
 
 def get_instances(ec2, instance_ids):
     instances = list(
@@ -143,6 +145,14 @@ def upload_file(instance_id, client, localpath, remotepath):
     print(f"Uploading `{localpath}` to {instance_id}...")
     ftp_client.put(localpath, remotepath)
     ftp_client.close()
+    print(f"`{localpath}` uploaded to {instance_id}.")
+
+
+def upload_folder(instance_id, client, localpath, remotepath):
+    ftp_client = FolderSFTPClient.from_transport(client._transport)
+    print(f"Uploading `{localpath}` to {instance_id}...")
+    ftp_client.mkdir(remotepath, ignore_existing=True)
+    ftp_client.put_dir(localpath, remotepath)
     print(f"`{localpath}` uploaded to {instance_id}.")
 
 
@@ -230,12 +240,15 @@ def main():
         args.training_script
     ), f"File `{args.training_script}` does not exist"
     file_paths = args.aux_files.split(",") if args.aux_files else []
+    copy_folders = args.aux_folders.split(",") if args.aux_folders else []
     for local_path in file_paths:
         assert os.path.exists(local_path), f"File `{local_path}` does not exist"
 
     remote_dir = f"aws-launcher-tmp-{uuid.uuid1()}"
     script_basename = os.path.basename(args.training_script)
     remote_script = os.path.join(remote_dir, script_basename)
+
+    # copy_folders = ["crypten", "configs", "examples", "datasets", "models"]
 
     # Upload files to all instances concurrently.
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as uploaders:
@@ -244,6 +257,10 @@ def main():
             uploaders.submit(
                 upload_file, instance_id, client, args.training_script, remote_script
             )
+            for local_folder in copy_folders:
+                uploaders.submit(
+                    upload_folder, instance_id, client, local_folder,os.path.join(remote_dir, local_folder)
+                )
             for local_path in file_paths:
                 uploaders.submit(
                     upload_file,
@@ -319,7 +336,7 @@ def parse_args():
              "No other actions will be done",
     )
 
-    parser.add_argument("--regions", type=str, default="us-west-2", help="AWS Region")
+    parser.add_argument("--regions", type=str, default="us-east-2,us-east-2", help="AWS Region")
 
     parser.add_argument(
         "--instances",
@@ -369,9 +386,17 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--aux_folders",
+        type=str,
+        default="crypten,configs,examples,datasets,models",
+        help="The comma-separated paths of additional folders "
+             " that need to be transferred to AWS instances. ",
+    )
+
+    parser.add_argument(
         "--prepare_cmd",
         type=str,
-        default="",
+        default="export PYTHONPATH=$PWD",
         help="The command to run before running distribute "
              "training for prepare purpose, e.g., setup "
              "environment, extract data files, etc.",
