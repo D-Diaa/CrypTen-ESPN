@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 
 config_folder = "configs"
@@ -5,7 +6,7 @@ batch_size = 1
 repeats = 20
 
 # [LAN, MIDDLE, WAN]
-delays = ["0.000125", "0.025", "0.05"]
+delays = ["0"]
 
 datasets = ["cifar10", "cifar100", "imagenet"]
 
