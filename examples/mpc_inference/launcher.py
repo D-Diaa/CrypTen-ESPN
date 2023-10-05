@@ -15,6 +15,7 @@ import shutil
 import torch
 import yaml
 
+import crypten
 from crypten.config import cfg
 from examples.multiprocess_launcher import MultiProcessLauncher
 
@@ -126,6 +127,7 @@ def _run_experiment(args):
     rank = os.environ['RANK']
     if int(rank) != 0:
         level = logging.CRITICAL
+    crypten.init()
     logging.getLogger().setLevel(level)
     # Device and config
     device_id = rank if torch.cuda.device_count() > 1 else 0
@@ -162,13 +164,10 @@ def _run_experiment(args):
             for key in aggregable_keys:
                 results[key].append(_results[key])
     results['delays'] = args.delays
-    # with open(f"{results_path}/{cfg_name}_result_{rank}.yaml", "w") as f:
-    #     yaml.dump(results, f)
-    if int(rank) == 0:
-        os.makedirs(results_path, exist_ok=True)
-        shutil.copyfile(args.config, f"{results_path}/{cfg_name}.yaml")
-        with open(f"{results_path}/{cfg_name}_result.yaml", "w") as f:
-            yaml.dump(results, f)
+    os.makedirs(results_path, exist_ok=True)
+    shutil.copyfile(args.config, f"{results_path}/{cfg_name}.yaml")
+    with open(f"{results_path}/{cfg_name}_result.yaml", "w") as f:
+        yaml.dump(results, f)
 
 
 def main(run_experiment):
