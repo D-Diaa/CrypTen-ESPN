@@ -20,7 +20,7 @@ configs = ["espn12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yam
 
 device_commands = ["--use-cuda"]
 
-base_command = f"python3 examples/mpc_inference/launcher.py --multiprocess --world_size 2 " \
+base_command = f"python3 examples/mpc_inference/launcher.py --world_size 2 " \
                f" --skip-plaintext " \
                f" --batch-size {batch_size} " \
                f" --n-batches {repeats}"
