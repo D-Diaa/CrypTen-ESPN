@@ -138,7 +138,7 @@ def _run_experiment(args):
     model_name = args.model_type
     if args.resume:
         model_name = "_".join(args.model_location.split("/")[-3:-1])
-    results_path = f"results/{args.dataset}/{model_name}_{device}"
+    results_path = f"~/results/{args.dataset}/{model_name}_{device}"
     results = None
     aggregable_keys = ["comm_time", "run_time", "run_time_amortized", "run_time_95conf_lower", "run_time_95conf_upper"]
     for delay in args.delays:

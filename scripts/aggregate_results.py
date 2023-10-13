@@ -15,7 +15,7 @@ styles = ["-", "--"]
 devices = ["cpu", "cuda:0"]
 
 for dataset in datasets:
-    models = os.listdir(f"results/{dataset}")
+    models = os.listdir(f"~/results/{dataset}")
     for _model in models:
         model = "_".join(_model.split("_")[:-4])
         device = "cpu" if _model.endswith("cpu") else "cuda"
@@ -23,7 +23,7 @@ for dataset in datasets:
         # create a plot
         for c, config in enumerate(configs):
             label = f"{config}_{device}"
-            results_file = f"results/{dataset}/{_model}/{config}_result.yaml"
+            results_file = f"~/results/{dataset}/{_model}/{config}_result.yaml"
             if os.path.exists(results_file):
                 with open(results_file, "r") as f:
                     results = yaml.safe_load(f)
