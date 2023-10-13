@@ -66,8 +66,40 @@ from pathlib import Path
 
 import boto3
 import paramiko
+from botocore.exceptions import ClientError
 
 from scripts.folder_sftp import FolderSFTPClient
+
+
+def start_instance(ec2, instance_id):
+    try:
+        ec2.start_instances(InstanceIds=[instance_id], DryRun=True)
+    except ClientError as e:
+        if 'DryRunOperation' not in str(e):
+            raise
+
+    # Dry run succeeded, run start_instances without dryrun
+    try:
+        response = ec2.start_instances(InstanceIds=[instance_id], DryRun=False)
+        print(response)
+    except ClientError as e:
+        print(e)
+
+
+def stop_instance(ec2, instance_id):
+    # Do a dryrun first to verify permissions
+    try:
+        ec2.stop_instances(InstanceIds=[instance_id], DryRun=True)
+    except ClientError as e:
+        if 'DryRunOperation' not in str(e):
+            raise
+
+    # Dry run succeeded, call stop_instances without dryrun
+    try:
+        response = ec2.stop_instances(InstanceIds=[instance_id], DryRun=False)
+        print(response)
+    except ClientError as e:
+        print(e)
 
 
 def get_instances(ec2, instance_ids):
@@ -171,6 +203,7 @@ def main():
     ssh_key_files = args.ssh_key_file.split(",")
 
     instances = []
+    boto_clients = []
     if len(regions) > 1:
         print("Multiple regions detected")
 
@@ -187,6 +220,10 @@ def main():
         )
 
         for i, region in enumerate(regions):
+            boto_clients += [boto3.client("ec2",
+                                          region_name=region,
+                                          aws_access_key_id=cf["default"]["aws_access_key_id"],
+                                          aws_secret_access_key=cf["default"]["aws_secret_access_key"], )]
             session = boto3.session.Session(
                 aws_access_key_id=cf["default"]["aws_access_key_id"],
                 aws_secret_access_key=cf["default"]["aws_secret_access_key"],
@@ -197,6 +234,11 @@ def main():
             instance = get_instances(ec2, [instance_ids[i]])
             instances += instance
     else:
+        boto_clients += [boto3.client("ec2",
+                                      region_name=regions[0],
+                                      aws_access_key_id=cf["default"]["aws_access_key_id"],
+                                      aws_secret_access_key=cf["default"]["aws_secret_access_key"], )]
+        boto_clients.append(boto_clients[-1])  # Copy the same client to use twice
         session = boto3.session.Session(
             aws_access_key_id=cf["default"]["aws_access_key_id"],
             aws_secret_access_key=cf["default"]["aws_secret_access_key"],
@@ -223,6 +265,9 @@ def main():
         for instance in instances:
             print(instance.public_ip_address)
         return
+
+    for i, instance_id in enumerate(instance_ids):
+        start_instance(boto_clients[i], instance_ids[i])
 
     world_size = len(instances)
     print(f"Running world size {world_size} with instances: {instances}")
@@ -259,7 +304,7 @@ def main():
             )
             for local_folder in copy_folders:
                 uploaders.submit(
-                    upload_folder, instance_id, client, local_folder,os.path.join(remote_dir, local_folder)
+                    upload_folder, instance_id, client, local_folder, os.path.join(remote_dir, local_folder)
                 )
             for local_path in file_paths:
                 uploaders.submit(
@@ -309,6 +354,9 @@ def main():
     for instance_id, client in client_dict.items():
         run_command(instance_id, client, f"rm -rf {remote_dir}")
         client.close()
+
+    for i, instance_id in enumerate(instance_ids):
+        stop_instance(boto_clients[i], instance_ids[i])
 
 
 def parse_args():
