@@ -10,13 +10,19 @@ delays = ["0"]
 
 datasets = ["cifar10", "cifar100", "imagenet"]
 
+# models = {
+#     "cifar10": ["resnet110", "minionn_bn", "vgg16_avg_bn", "resnet18"],
+#     "cifar100": ["resnet32", "vgg16_avg_bn", "resnet18"],
+#     "imagenet": ["resnet50"]
+# }
 models = {
-    "cifar10": ["resnet110", "minionn_bn", "vgg16_avg_bn", "resnet18"],
-    "cifar100": ["resnet32", "vgg16_avg_bn", "resnet18"],
+    "cifar10": ["resnet110", "resnet18"],
+    "cifar100": ["resnet32", "resnet18"],
     "imagenet": ["resnet50"]
 }
 
-configs = ["espn12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yaml"]
+# configs = ["espn12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yaml"]
+configs = ["default12.yaml", "honeybadger12.yaml", "espn12.yaml"]
 
 device_commands = ["--use-cuda"]
 
@@ -26,7 +32,7 @@ base_command = f"python3 examples/mpc_inference/launcher.py --world_size 2 " \
                f" --n-batches {repeats}"
 
 base_command += " --delays " + " ".join(delays)
-
+cmds = []
 for dataset in datasets:
     for model in models[dataset]:
         cmd = base_command + f" --dataset {dataset}" \
@@ -34,4 +40,5 @@ for dataset in datasets:
         for device_cmd in device_commands:
             for config in configs:
                 cmd += f" --config {config_folder}/{config} {device_cmd}"
-                os.system(cmd)
+                cmds.append(cmd)
+os.system(";".join(cmds))
