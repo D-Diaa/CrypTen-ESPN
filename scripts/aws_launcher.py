@@ -188,6 +188,13 @@ def upload_folder(instance_id, client, localpath, remotepath):
     print(f"`{localpath}` uploaded to {instance_id}.")
 
 
+def download_folder(instance_id, client, localpath, remotepath):
+    ftp_client = FolderSFTPClient.from_transport(client._transport)
+    print(f"Downloading `{localpath}` from {instance_id}...")
+    ftp_client.get_dir(remotepath, f"{localpath}_{instance_id}")
+    print(f"`{localpath}` downloaded from {instance_id}.")
+
+
 def main():
     args = parse_args()
 
@@ -287,6 +294,7 @@ def main():
     ), f"File `{args.training_script}` does not exist"
     file_paths = args.aux_files.split(",") if args.aux_files else []
     copy_folders = args.aux_folders.split(",") if args.aux_folders else []
+    download_folders = ["results"]
     for local_path in file_paths:
         assert os.path.exists(local_path), f"File `{local_path}` does not exist"
 
@@ -350,14 +358,19 @@ def main():
             print(f"Run command: {cmd}")
             executor.submit(run_command, instance_id, client, cmd, environment)
             rank += 1
-
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as downloaders:
+        for instance_id, client in client_dict.items():
+            for local_folder in download_folders:
+                downloaders.submit(
+                    download_folder, instance_id, client, local_folder, os.path.join(remote_dir, local_folder)
+                )
     # Cleanup temp dir.
     for instance_id, client in client_dict.items():
         run_command(instance_id, client, f"rm -rf {remote_dir}")
         client.close()
 
     for i, instance_id in enumerate(instance_ids):
-        stop_instance(boto_clients[i], instance_ids[i])
+        stop_instance(boto_clients[i], [instance_ids[i]])
 
 
 def parse_args():
