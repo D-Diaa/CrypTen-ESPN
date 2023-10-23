@@ -162,7 +162,7 @@ def _run_experiment(args):
         all_results = {conf: {
             key: [] for key in aggregable_keys
         } for conf in configs}
-        os.makedirs(f"~/results/relus/{device}", exist_ok=True)
+        os.makedirs(f"results/relus/{device}", exist_ok=True)
         for delay in delays:
             results = relu_compare_run(n_points=n_points, delay=delay, device=device)
             for i, conf in enumerate(configs):
@@ -172,7 +172,7 @@ def _run_experiment(args):
         if "RANK" in os.environ and os.environ["RANK"] == "0":
             for conf in configs:
                 all_results[conf]['delays'] = delays
-                with open(f"~/results/relus/{device}/{conf}_result.yaml", "w") as f:
+                with open(f"results/relus/{device}/{conf}_result.yaml", "w") as f:
                     yaml.dump(all_results[conf], f)
 
 
