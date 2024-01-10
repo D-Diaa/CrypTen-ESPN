@@ -37,7 +37,7 @@ models = {
 ```
 You can also edit the configs (default is BinaryShares Relu, crypten is CrypTen Polynomial Evaluation). The rest are as described in the paper.
 ```python
-configs = ["espn12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yaml"]
+configs = ["espn16.yaml", "default12.yaml", "crypten12.yaml", "honeybadger16.yaml"]
 ```
 ## Accuracy Experiments
 Similary, you can run all the accuracy experiments:
