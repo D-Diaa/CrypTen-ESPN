@@ -11,12 +11,12 @@ machine_paths = [
 ]
 
 # List of configurations to consider
-CONFIGURATIONS = ['espn12', 'honeybadger12', 'default12']
+CONFIGURATIONS = ['espn16', 'honeybadger16', 'default12']
 
 # Dictionary to rename configurations for the final table
 RENAME_DICT = {
-    'espn12': 'ESPN',
-    'honeybadger12': 'HoneyBadger',
+    'espn16': 'ESPN',
+    'honeybadger16': 'HoneyBadger',
     'default12': 'CryptGPU'
 }
 
@@ -71,12 +71,12 @@ for config in CONFIGURATIONS:
     renamed_config = RENAME_DICT[config]
     table[(renamed_config, 'comm_time')] = "$" + round(table[(renamed_config, 'comm_time')], ROUND).astype(str) + "$"
     table[(renamed_config, 'run_time')] = ("$" + round(table[(renamed_config, 'run_time_amortized')], ROUND).astype(str)
-                                           + " \\pm " + round(table[(renamed_config, 'confidence_interval')] / 2, ROUND).astype(str) + "$")
+                                           + " \\pm " + round(table[(renamed_config, 'confidence_interval')] / 2,
+                                                              ROUND).astype(str) + "$")
 
 # Split into comm table and run_time table
 comm_table = table[[col for col in table.columns if 'comm_time' in col]].copy()
 run_time_table = table[[col for col in table.columns if 'run_time' in col]].copy()
-
 
 # Convert tables to LaTeX format with styling, captions, and centering
 comm_latex = comm_table.to_latex(escape=False, multicolumn_format='c', bold_rows=True,
