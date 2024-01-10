@@ -6,7 +6,8 @@ batch_size = 1
 repeats = 20
 
 # [LAN, MIDDLE, WAN]
-delays = ["0"]
+# delays = ["0.000125", "0.025", "0.05"] #LOCAL WAN
+delays = ["0"] #Actual WAN
 
 datasets = ["cifar10", "cifar100", "imagenet"]
 
@@ -15,18 +16,22 @@ datasets = ["cifar10", "cifar100", "imagenet"]
 #     "cifar100": ["resnet32", "vgg16_avg_bn", "resnet18"],
 #     "imagenet": ["resnet50"]
 # }
+
 models = {
     "cifar10": ["resnet110", "resnet18"],
     "cifar100": ["resnet32", "resnet18"],
     "imagenet": ["resnet50"]
 }
 
-# configs = ["espn12.yaml", "default12.yaml", "crypten12.yaml", "honeybadger12.yaml"]
-configs = ["default12.yaml", "honeybadger12.yaml", "espn12.yaml"]
+
+configs = ["default12.yaml", "crypten12.yaml"] #CryptGPU, CryptenPoly
+configs += ["honeybadger16.yaml", "espn16.yaml"] #Ours
 
 device_commands = ["--use-cuda"]
-
-base_command = f"python3 examples/mpc_inference/launcher.py --world_size 2 " \
+#LOCAL WAN
+# base_command = f"python3 examples/mpc_inference/launcher.py --multiprocess --world_size 2 " \
+#ACTUAL WAN
+base_command = f"python3 examples/mpc_inference/launcher.py  --world_size 2 " \ 
                f" --skip-plaintext " \
                f" --batch-size {batch_size} " \
                f" --n-batches {repeats}"
