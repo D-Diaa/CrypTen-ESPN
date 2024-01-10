@@ -31,6 +31,6 @@ def split_dataset(source_folder, target_folder, num_buckets=8):
                 shutil.copy2(os.path.join(cls_path, img), bucket_cls_path)
 
 if __name__ == "__main__":
-    source_folder = "/scratch/lprfenau/datasets/imagenet/val"
-    target_folder = "/scratch/a2diaa/datasets/split_imagenet/split_val"
+    source_folder = "/scratch/datasets/imagenet/val"
+    target_folder = "/scratch/datasets/split_imagenet/split_val"
     split_dataset(source_folder, target_folder)
