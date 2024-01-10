@@ -21,6 +21,7 @@ from torchvision import datasets, transforms
 # from torchvision.models.resnet import resnet50
 from torchvision.models import resnet50, ResNet50_Weights
 from torchvision.transforms import InterpolationMode
+from tqdm import tqdm
 
 import crypten
 import crypten.communicator as comm
@@ -105,7 +106,7 @@ def get_dataset(datatset_name: str = "cifar10", batch_size=1):
             worker_init_fn=seed_worker,
             generator=g)
         num_classes = 100
-    elif datatset_name == "imagenet":
+    elif "imagenet" in datatset_name:
         interpolation = InterpolationMode("bilinear")
         preprocessing = presets.ClassificationPresetEval(
             crop_size=224, resize_size=232, interpolation=interpolation
@@ -183,7 +184,6 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
     # switch to evaluate mode
     plaintext_model.eval()
     private_model.eval()
-
     accuracy_plain = AverageMeter()
     accuracy_enc = AverageMeter()
     average_error = AverageMeter()
@@ -191,15 +191,16 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
     inference_time = AverageMeter()
     communication_time = AverageMeter()
     total_time = AverageMeter()
+    samples = 0
     with torch.no_grad():
-        for i, (input, target) in enumerate(val_loader):
+        for i, (input, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
             input = input.to(device)
             target = target.to(device)
             # compute output for plaintext
             output_plaintext = plaintext_model(input)
             # encrypt input and compute output for private
             # assumes that private model is encrypted with src=0
-            input_encr = encrypt_data_tensor_with_src(input)
+            input_encr = encrypt_data_tensor_with_src(input, device)
             comm.get().reset_communication_stats()
             start_time = time.monotonic()
             output_encr = private_model(input_encr)
@@ -232,6 +233,7 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             # Match
             mtch = sum(pred_plain == pred_enc) * 100 / input.size(0)
             match.add(mtch, input.size(0))
+            samples += input.size(0)
 
             # log all info
             logging.info("==============================")
@@ -248,6 +250,11 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
             logging.info("Bytes      {:.3f} ({:.3f})".format(comm_stats['bytes'], comm_stats['bytes']))
             logging.info("Comtime    {:.3f} ({:.3f})".format(comm_stats['time'], communication_time.value()))
             logging.info("Runtime(T) {:.3f} ({:.3f})".format(time_diff, total_time.value()))
+            # if comm.get().get_rank() == 0:
+            #     dist_types = ["histogram"]
+            #     plot_pdf(input_values, "Input", dist_types)
+            #     plot_pdf(ans_before_scale_values, "Ans Before Scale", dist_types)
+            #     plot_pdf(ans_after_scale_values, "Ans After Scale", dist_types)
             # only use the first 1000 examples
             if n_batches is not None and i + 1 >= n_batches:
                 break
@@ -263,7 +270,8 @@ def validate_side_by_side(val_loader, plaintext_model, private_model, device, n_
         "run_time_95conf_lower": mmh.item(),
         "run_time_95conf_upper": mph.item(),
         "run_time_amortized": inference_time.value(),
-        "comm": comm_stats
+        "comm": comm_stats,
+        "samples": samples
     }
     return results
 
@@ -275,25 +283,14 @@ def get_input_size(val_loader):
 
 def construct_private_model(input_size, model, model_name, num_classes, device=torch.device('cpu')):
     """Encrypt and validate trained model for multi-party setting."""
-    # get rank of current process
-    rank = comm.get().get_rank()
-    dummy_input = torch.empty(input_size, device=device)
-
-    # party 0 always gets the actual model; remaining parties get dummy model
-    if rank == 0:
-        model_upd = model
-    else:
-        model_upd = build_model(model_name, num_classes)
-
-    model_upd = model_upd.to(device)
-    private_model = crypten.nn.from_pytorch(model_upd, dummy_input).to(device).encrypt(src=0)
+    dummy_input = torch.empty(input_size)
+    src_id = 0
+    private_model = crypten.nn.from_pytorch(model.to(device), dummy_input.to(device)).to(device).encrypt(src=src_id)
     return private_model
 
 
-def encrypt_data_tensor_with_src(input):
+def encrypt_data_tensor_with_src(input, device):
     """Encrypt data tensor for multi-party setting"""
-    # get rank of current process
-    rank = comm.get().get_rank()
     # get world size
     world_size = comm.get().get_world_size()
 
@@ -303,12 +300,7 @@ def encrypt_data_tensor_with_src(input):
     else:
         # party 0 gets the actual tensor since world size is 1
         src_id = 0
-
-    if rank == src_id:
-        input_upd = input
-    else:
-        input_upd = torch.empty(input.size(), device=input.device)
-    private_input = crypten.cryptensor(input_upd, src=src_id)
+    private_input = crypten.cryptensor(input.to(device), src=src_id).to(device)
     return private_input
 
 
