@@ -65,12 +65,21 @@ parser.add_argument(
              "minionn", "minionn_bn"],
     help="Model architecture",
 )
+imagenet_splits = [
+    "imagenet0",
+    "imagenet1",
+    "imagenet2",
+    "imagenet3",
+    "imagenet4",
+    "imagenet5",
+    "imagenet6",
+    "imagenet7"]
 
 parser.add_argument(
     "--dataset",
     default="cifar10",
     type=str,
-    choices=["cifar10", "cifar100", "imagenet"],
+    choices=["cifar10", "cifar100", "imagenet"] + imagenet_splits,
     help="evaluation dataset",
 )
 
@@ -127,12 +136,10 @@ def _run_experiment(args):
     rank = os.environ['RANK']
     if int(rank) != 0:
         level = logging.CRITICAL
-    crypten.init()
+    crypten.init(args.config)
     logging.getLogger().setLevel(level)
     # Device and config
-    device_id = rank if torch.cuda.device_count() > 1 else 0
-    device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() and args.use_cuda else "cpu")
-    cfg.load_config(args.config)
+    device = torch.device(f"cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
     # Naming
     cfg_name = ntpath.basename(args.config).split(".")[0]
     model_name = args.model_type
