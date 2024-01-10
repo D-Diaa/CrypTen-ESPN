@@ -6,6 +6,15 @@ batch_size = 100
 
 delays = ["0"]
 
+# datasets = [
+#     "imagenet0",
+#     "imagenet1",
+#     "imagenet2",
+#     "imagenet3",
+#     "imagenet4",
+#     "imagenet5",
+#     "imagenet6",
+#     "imagenet7"]
 datasets = ["cifar10", "cifar100", "imagenet"]
 
 models = {
@@ -28,12 +37,13 @@ base_command = f"python3 examples/mpc_inference/launcher.py --multiprocess --wor
 base_command += " --delays " + " ".join(delays)
 
 for dataset in datasets:
-    for model in models[dataset]:
+    dataset_name = 'imagenet'if 'imagenet' in dataset else dataset
+    for model in models[dataset_name]:
         for run in runs:
             cmd = None
-            for model_folder in os.listdir(f"{models_folder}/{dataset}"):
+            for model_folder in os.listdir(f"{models_folder}/{dataset_name}"):
                 if model_folder.startswith(f"{model}"):
-                    model_file = f"{models_folder}/{dataset}/{model_folder}/run_{run}/best_model.pth"
+                    model_file = f"{models_folder}/{dataset_name}/{model_folder}/run_{run}/best_model.pth"
                     print(model_file)
                     cmd = base_command + f" --dataset {dataset}" \
                                          f" --model-type {model} " \

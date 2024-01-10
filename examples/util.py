@@ -8,10 +8,11 @@
 import logging
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg as nla
 import torch
-
+from scipy.stats import gaussian_kde, laplace, expon
 
 class NoopContextManager:
     """Context manager that does nothing."""
@@ -116,6 +117,45 @@ def inspect(mpcten, desc: str, torchten=None):
     else:
         logging.info(f"{desc}: [{mn}<->{mx}]")
     # torch.norm(tensor, p='fro')
+
+
+def estimate_pdf(data, dist_type='gaussian'):
+    # Calculate the percentiles to focus on the central 95% of the data
+    lower_bound = np.percentile(data, 2.5)
+    upper_bound = np.percentile(data, 97.5)
+    if dist_type == 'gaussian':
+        kde = gaussian_kde(data)
+    elif dist_type == 'laplace':
+        loc, scale = laplace.fit(data)
+        kde = lambda x: laplace.pdf(x, loc, scale)
+    elif dist_type == 'exponential':
+        loc, scale = expon.fit(data)
+        kde = lambda x: expon.pdf(x, loc, scale)
+    else:
+        raise ValueError(f"Unsupported distribution type: {dist_type}")
+
+    x = np.linspace(lower_bound, upper_bound, 2048)
+    return x, kde(x)
+
+
+def plot_pdf(data_all, title, dist_types=None):
+    if dist_types is None:
+        dist_types = ['gaussian']
+    for i, data in enumerate(data_all):
+        plt.clf()
+        data = data.flatten()
+        if "histogram" in dist_types:
+            plt.hist(data, bins=2048, density=True, alpha=0.5, label='Actual Data')
+
+        for dist_type in dist_types:
+            if dist_type == "histogram":
+                continue
+            x, pdf = estimate_pdf(data, dist_type)
+            plt.plot(x, pdf, label=f'{dist_type.title()} PDF')
+
+        plt.legend()
+        plt.title(title)
+        plt.savefig(f"{title}{i}.png")
 
 
 def count_nans(torchten):
