@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
+from math import ceil
 
 import crypten
 import crypten.communicator as comm
@@ -13,10 +14,23 @@ from crypten.config import cfg
 from ..tensor_types import is_tensor
 
 __all__ = ["norm", "polynomial", "pos_pow", "pow", "crypten_poly",
-           "espn_poly", "espn_pow",
-           "honeybadger_poly"]
+           "espn_poly", "espn_pow", "new_espn_poly", "honeybadger_poly", "new_honeybadger_poly"]
 
 from ...cuda import CUDALongTensor
+
+# Parallel sum NCR-wise
+def ncr_sum(input_tensor, sizes):
+    # Create an index tensor that corresponds to each segment
+    indices = torch.repeat_interleave(torch.arange(len(sizes), device=input_tensor.device),
+                                      torch.tensor(sizes, device=input_tensor.device))
+
+    # Use the index_add function to sum the segments efficiently
+    result = torch.zeros(len(sizes), input_tensor.size(1), dtype=input_tensor.share._tensor.dtype,
+                         device=input_tensor.device)
+    result.index_add_(0, indices, input_tensor.share._tensor)
+    from crypten.mpc import MPCTensor
+    result = MPCTensor.from_shares(result, 0).to(input_tensor.device)
+    return result
 
 
 def pow(self, p, **kwargs):
@@ -90,11 +104,11 @@ def crypten_poly(self, coeffs, func="mul"):
     # Multiply terms by coefficients and sum
     return terms.mul(coeffs).sum(0)
 
-
-def get_ncr(degree, scale, coeffs):
+# Updated NCR (No coeffs)
+def get_ncr(degree):
     nCr = []
-    for k in range(degree + 1):
-        nCr += [coeffs[k] * scale ** (degree + 1 - k)]
+    for k in range(2, degree + 1):
+        nCr += [1]
         for i in range(k):
             nCr += [nCr[-1] * (k - i) / (i + 1)]
     nCr = torch.tensor(nCr).unsqueeze(1)
@@ -105,73 +119,110 @@ def espn_pow(self, k):
     """Perform element-wise exponentiation by constant k"""
     assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
 
-    shape = self._tensor.shape
-    self._tensor = self._tensor.reshape((-1,))
+    shape = self.share.shape
+    self.share = self.share.reshape((-1,))
 
     nCr = [1]
     for i in range(k):
         nCr += [nCr[-1] * (k - i) / (i + 1)]
     nCr = torch.tensor(nCr, device=self.device).unsqueeze(1)
+    a_s = torch.stack([self.share._tensor ** i for i in range(k + 1)])
+    b_s = torch.stack([self.share._tensor ** (k - i) for i in range(k + 1)])
 
-    a_s = torch.stack([self.share ** i for i in range(k + 1)])
+    if self.is_cuda:
+        a_s = CUDALongTensor(a_s)
+        b_s = CUDALongTensor(b_s)
+
     a = crypten.cryptensor(a_s, precision=0, src=0, device=self.device, ptype=crypten.mpc.arithmetic)
-
-    b_s = torch.stack([self.share ** (k - i) for i in range(k + 1)])
     b = crypten.cryptensor(b_s, precision=0, src=1, device=self.device, ptype=crypten.mpc.arithmetic)
+
     scale = self.encoder.scale
 
     ans = (a * b * nCr).sum(dim=0) / (scale ** (k - 1))
     ans.encoder = self.encoder
     ans._tensor = ans._tensor.reshape(shape)
+    self._tensor = self._tensor.reshape(shape)
     return ans
+
+
+def new_espn_poly(self, coeffs):
+    """Perform element-wise exponentiation by constant k"""
+    assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
+    rank = comm.get().get_rank()
+    shape = self.share.shape
+    self.share = self.share.reshape((-1,))
+    t = 2
+
+    scaled, coeffs, degree, scale, scalers = scale_handler(self, coeffs, t)
+    nCr = get_ncr(degree).to(self.device)
+
+    a_s = torch.empty(size=(len(nCr), self.share.shape[0]), device=self.device)
+    b_s = torch.empty(size=(len(nCr), self.share.shape[0]), device=self.device)
+    if rank == 0:
+        a_s = torch.cat(
+            [torch.stack([scaled[k].share._tensor ** i for i in range(k + 1)])
+             for k in range(2, degree + 1)]
+        ).to(self.device)
+    if rank == 1:
+        b_s = torch.cat(
+            [torch.stack([scaled[k].share._tensor ** (k - i) for i in range(k + 1)])
+             for k in range(2, degree + 1)]
+        ).to(self.device)
+
+    if self.is_cuda:
+        a_s = CUDALongTensor(a_s)
+        b_s = CUDALongTensor(b_s)
+
+    a = crypten.cryptensor(a_s, precision=0, src=0, device=self.device, ptype=crypten.mpc.arithmetic)
+    b = crypten.cryptensor(b_s, precision=0, src=1, device=self.device, ptype=crypten.mpc.arithmetic)
+
+    ans = coeffs[1].item() * scaled[1] + coeffs[0] * scale
+    idx = torch.arange(2, degree + 1)
+    down_scales = 2**(self.encoder._precision_bits*(idx-1)-torch.tensor(scalers[1:])*idx)
+
+    ans_ncr = ncr_sum(a * b * nCr, list(range(3, degree + 2)))
+    ans_ncr /= down_scales.unsqueeze(1).to(self.device)
+    ans_ncr *= coeffs[2: degree + 1].unsqueeze(1)
+    ans += ans_ncr.sum(0)
+
+    ans.encoder = self.encoder
+    ans._tensor = ans._tensor.reshape(shape)
+    self._tensor = self._tensor.reshape(shape)
+    return ans / scale
 
 
 def espn_poly(self, coeffs):
     """Perform element-wise polynomial evaluation using fast_pow"""
     assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
-    # coeffs = torch.cat([torch.tensor([0.0], device=self.device), coeffs])
     """Info and preprocessed"""
-    # with Timer("-----------\nPreparation"):
     shape = self.share.shape
     self.share = self.share.reshape((-1,))
     degree = coeffs.size(0) - 1
-    scale = self.encoder.scale
-    nCr = get_ncr(degree, scale, coeffs).to(self.device)
+    nCr = get_ncr(degree).to(self.device)
 
     """Power computation"""
-    # with Timer("Powers"):
-    # powers = [torch.ones_like(self.share), self.share]
-    # powers += [torch.pow(self.share, i) for i in range(2, degree + 1)]
     exps = torch.tensor(range(degree + 1), device=self.device).unsqueeze(1)
     powers = self.share.unsqueeze(0).repeat(degree + 1, 1)
     powers = powers ** exps
 
     """Power replication"""
-    # with Timer("Replication"):
-    # ab_s = []
-    # for k in range(degree + 1):
-    #     ab_s += powers[rank*k:(k+1)*(1-rank):1-2*rank]
-    # # [powers[(rank * (k - 2 * i) + i)] for i in range(k + 1)]
-    # ab_s = torch.stack(ab_s)
-    # a_s = ab_s
-    # b_s = ab_s
     a_s = []
     if self.is_cuda:
-        for k in range(degree + 1):
+        for k in range(2, degree + 1):
             a_s += powers[:k + 1].tensor()
         a_s = CUDALongTensor(torch.stack(a_s))
     else:
-        for k in range(degree + 1):
+        for k in range(2, degree + 1):
             a_s += powers[:k + 1]
         a_s = torch.stack(a_s)
 
     b_s = []
     if self.is_cuda:
-        for k in range(degree + 1):
+        for k in range(2, degree + 1):
             b_s += torch.flip(powers[:k + 1].tensor(), dims=(0,))
         b_s = CUDALongTensor(torch.stack(b_s))
     else:
-        for k in range(degree + 1):
+        for k in range(2, degree + 1):
             b_s += torch.flip(powers[:k + 1], dims=(0,))
         b_s = torch.stack(b_s)
 
@@ -181,29 +232,80 @@ def espn_poly(self, coeffs):
     b = crypten.cryptensor(b_s, precision=0, src=1, device=self.device, ptype=crypten.mpc.arithmetic)
 
     """Final Aggregation"""
-    # with Timer("Aggregation"):
-    ans = (a * b * nCr).sum(dim=0) / scale ** degree
+    scale = self.encoder.scale
+    ans = coeffs[1].item() * self + coeffs[0]
+
+    scales = torch.tensor([scale ** (k - 1) for k in range(2, degree + 1)], device=self.device).unsqueeze(1)
+    ans_ncr = ncr_sum(a * b * nCr, list(range(3, degree + 2))) / scales
+    ans_ncr *= coeffs[2: degree + 1].unsqueeze(1)
+    ans += ans_ncr.sum(0)
+
+    ans.encoder = self.encoder
 
     """Postprocessing"""
-    ans.encoder = self.encoder
     ans._tensor = ans._tensor.reshape(shape)
     self._tensor = self._tensor.reshape(shape)
     return ans
 
 
 def honeybadger_poly(self, coeffs):
-    k = coeffs.size(0) - 1
+    degree = coeffs.size(0) - 1
     scale = self.encoder.scale
-    kpows = self._tensor.honeybadger_pows(k)
-    coeffs_t = torch.tensor([coeffs[i] * scale ** (k - i) for i in range(1, k + 1)], device=self.device)
-    while len(coeffs_t.size()) < len(kpows.size()):
-        coeffs_t = coeffs_t.unsqueeze(1)
-    ans = (kpows * coeffs_t).sum(dim=0) / scale ** (k - 1)
-    return ans + coeffs[0]
+    kpows = self._tensor.honeybadger_pows(degree)
+    scales = torch.tensor([scale ** (i - 1) for i in range(1, degree + 1)], device=self.device)
+    while len(scales.size()) < len(kpows.size()):
+        scales = scales.unsqueeze(-1)
+        coeffs = coeffs.unsqueeze(-1)
+    ans = kpows / scales
+    ans *= coeffs[1:]
+    return ans.sum(0) + coeffs[0]
 
 
-def polymath_poly(x, coeffs, func="mul"):
-    pass
+def new_honeybadger_poly(self, coeffs):
+    assert comm.get().get_world_size() == 2, "Exponentation only supported for two parties"
+    t = 2
+    scaled, coeffs, degree, scale, scalers = scale_handler(self, coeffs, t, grouped=True)
+    kpows = scaled._tensor.honeybadger_pows(degree)
+
+    ans = coeffs[1].item() * scaled[1]
+    for k in range(2, degree + 1):
+        down_scale = 2**(self.encoder._precision_bits*(k-1)-scalers[k-1]*k)
+        ans += (kpows[k - 1, k] / down_scale) * coeffs[k].item()
+    ans = ans / scale + coeffs[0].item()
+    ans.encoder = self.encoder
+    return ans
+
+
+def scale_handler(self, coeffs, a=2, grouped=False):
+    # Basic parameters
+    degree = len(coeffs) - 1
+    delta = self.encoder._precision_bits
+
+    # Compute scales_trick
+    scalers = [max(0, ceil((i - a) * delta / i)) for i in range(1, degree + 1)]
+    scales_trick = torch.tensor([1] + [2 ** scaler for scaler in scalers], device=self.device)
+
+    # Prepare self.share for scaling
+    # Unsqueeze and repeat self.share in a single step to match the degree
+    unsqueezed_and_repeated_share = self.share.unsqueeze(0).repeat(degree + 1, *[1] * (self.share.dim()))
+
+    # Unsqueeze scales_trick to match the dimensions of unsqueezed_and_repeated_share
+    # Target shape: [degree + 1, 1, 1, ..., 1]
+    unsqueezed_scales_trick = scales_trick.view(-1, *([1] * self.share.dim()))
+
+    # Perform scaling
+    scaled = unsqueezed_and_repeated_share // unsqueezed_scales_trick
+
+    from crypten.mpc import MPCTensor
+    if not grouped:
+        scaled = [MPCTensor.from_shares(scaled[k], 0).to(self.device) for k in range(degree + 1)]
+    else:
+        scaled = MPCTensor.from_shares(scaled, 0).to(self.device)
+
+    # Scale coefficients
+    coeffs *= self.encoder.scale
+
+    return scaled, coeffs, degree, self.encoder.scale, scalers
 
 
 def polynomial(self, coeffs, func="mul"):
@@ -226,15 +328,16 @@ def polynomial(self, coeffs, func="mul"):
         for _ in range(terms.dim() - 1):
             coeffs = coeffs.unsqueeze(1)
         return terms.mul(coeffs).sum(0)
-
     if cfg.functions.poly_method == "crypten":
         return self.crypten_poly(coeffs, func)
     elif cfg.functions.poly_method == "espn":
+        return self.new_espn_poly(coeffs)
+    elif cfg.functions.poly_method == "espn_old":
         return self.espn_poly(coeffs)
-    elif cfg.functions.poly_method == "honeybadger":
+    elif cfg.functions.poly_method == "honeybadger_old":
         return self.honeybadger_poly(coeffs)
-    elif cfg.functions.poly_method == "polymath":
-        return polymath_poly(self, coeffs, func)
+    elif cfg.functions.poly_method == "honeybadger":
+        return self.new_honeybadger_poly(coeffs)
     else:
         raise NotImplementedError(f"{cfg.functions.poly_method} polynomial evaluation is not supported")
 

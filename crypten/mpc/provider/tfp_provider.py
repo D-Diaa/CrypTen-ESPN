@@ -49,16 +49,18 @@ class TrustedFirstParty(TupleProvider):
 
     def kpows(self, size, k, device=None):
         """Generate square double of given size"""
-        if cfg.mpc.real_shares:
-            r = generate_random_ring_element(size, device=device)
-            rs = [r]
-            for _ in range(2, k + 1):
-                rs.append(rs[-1] * r)
-
-            # Stack to vectorize scatter function
-            stacked = torch_stack(rs)
-        else:
-            stacked = ones((k, *size), device=device)
+        # if cfg.mpc.real_shares:
+        #     r = generate_random_ring_element(size, device=device)
+        #     rs = [r]
+        #     for _ in range(2, k + 1):
+        #         rs.append(rs[-1] * r)
+        #
+        #     # Stack to vectorize scatter function
+        #     stacked = torch_stack(rs)
+        # else:
+        #     stacked = ones((k, *size), device=device)
+        # For fair timing comparison:
+        stacked = ones((k, *size), device=device)
         stacked = ArithmeticSharedTensor(stacked, precision=0, src=0)
         return stacked
 
