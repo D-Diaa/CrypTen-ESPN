@@ -48,8 +48,8 @@ functions:
   # error function configuration:
   erf_iterations: 8
 mpc:
-  real_shares: False
-  real_triplets: False
+  real_shares: True
+  real_triplets: True
   active_security: False
   provider: "TFP"
   protocol: "beaver"
