@@ -118,14 +118,16 @@ class DistributedCommunicator(Communicator):
     def send(self, tensor, dst):
         """Sends the specified tensor to the destination dst."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         dist.send(tensor.data, dst, group=self.main_group)
 
     @_logging
     def recv(self, tensor, src=None):
         """Receives a tensor from an (optional) source src."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         result = tensor.clone()
         dist.recv(result.data, src=src, group=self.main_group)
         return result
@@ -134,21 +136,24 @@ class DistributedCommunicator(Communicator):
     def isend(self, tensor, dst):
         """Sends the specified tensor to the destination dst."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         return dist.isend(tensor.data, dst, group=self.main_group)
 
     @_logging
     def irecv(self, tensor, src=None):
         """Receives a tensor from an (optional) source src."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         return dist.irecv(tensor.data, src=src, group=self.main_group)
 
     @_logging
     def scatter(self, scatter_list, src, size=None, device=None):
         """Scatters a list of tensors to all parties."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         if src != self.get_rank():
             if size is None:
                 size = scatter_list[self.get_rank()].size()
@@ -169,7 +174,8 @@ class DistributedCommunicator(Communicator):
     def reduce(self, input, dst, op=ReduceOp.SUM, batched=False):
         """Reduces the input data across all parties."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         if batched:
             assert isinstance(input, list), "batched reduce input must be a list"
             reqs = []
@@ -195,7 +201,8 @@ class DistributedCommunicator(Communicator):
     def all_reduce(self, input, op=ReduceOp.SUM, batched=False):
         """Reduces the input data across all parties; all get the final result."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         if batched:
             assert isinstance(input, list), "batched reduce input must be a list"
             reqs = []
@@ -220,7 +227,8 @@ class DistributedCommunicator(Communicator):
     def gather(self, tensor, dst):
         """Gathers a list of tensors in a single party."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         if self.get_rank() == dst:
             result = []
             device = tensor.data.device
@@ -237,7 +245,8 @@ class DistributedCommunicator(Communicator):
     def all_gather(self, tensor):
         """Gathers tensors from all parties in a list."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         result = []
         device = tensor.data.device
         for _ in range(self.get_world_size()):
@@ -251,7 +260,8 @@ class DistributedCommunicator(Communicator):
     def broadcast(self, input, src, group=None, batched=False):
         """Broadcasts the tensor to all parties."""
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         group = self.main_group if group is None else group
         if batched:
             assert isinstance(input, list), "batched reduce input must be a list"
@@ -277,7 +287,8 @@ class DistributedCommunicator(Communicator):
         function.
         """
         assert dist.is_initialized(), "initialize the communicator first"
-        
+        time.sleep(cfg.communicator.delay)
+
         dist.barrier(group=self.main_group)
 
     @_logging
@@ -286,6 +297,7 @@ class DistributedCommunicator(Communicator):
         
         if group is None:
             group = self.main_group
+        time.sleep(cfg.communicator.delay)
 
         buf = pickle.dumps(obj)
         size = torch.tensor(len(buf), dtype=torch.int32)
@@ -303,6 +315,7 @@ class DistributedCommunicator(Communicator):
         
         if group is None:
             group = self.main_group
+        time.sleep(cfg.communicator.delay)
 
         size = torch.tensor(1, dtype=torch.int32)
         dist.irecv(size, src=src, group=group).wait()
@@ -315,7 +328,8 @@ class DistributedCommunicator(Communicator):
     @_logging
     def broadcast_obj(self, obj, src, group=None):
         """Broadcasts a given object to all parties."""
-        
+        time.sleep(cfg.communicator.delay)
+
         if group is None:
             group = self.main_group
 
